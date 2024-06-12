@@ -6,7 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"main.go/database"
 	"main.go/model"
-	"main.go/utils"
+	"main.go/utilities"
 )
 
 
@@ -22,53 +22,50 @@ func CreateUserAccount(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"error":err.Error()})
 	}
 
-	//check if the user is already registered
+
 	email:=user.Email
 	
 	//validate email address
-	if ! utils.ValidateEmail(email){
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"message":"invalid email address"})
-		}else{
-			result :=db.Where("phone_number = ?",user.PhoneNumber).First(&user)
-				if result.Error == nil{
-					//email already exist in the database
-					return c.Status(fiber.StatusConflict).JSON(fiber.Map{"message":"User with this phone number already exists"})
-				}else if result.Error != gorm.ErrRecordNotFound{
-					c.Status(fiber.ErrNotFound.Code).JSON(fiber.Map{"message":"internal server error"})
-				}
-			_,err := utils.ValidatePhoneNumber(user.PhoneNumber,user.CountryCode)
-			if err !=nil{
-				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"message":err.Error()})
-			}else{
-				if user.ConfirmPassword != user.Password{
-					return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-						"message":"passwords do not match",
-					})
-				}else{
-					hashed_password, _:= utils.HashPassword(user.Password)
+	if ! utilities.ValidateEmail(email){
+		return utilities.ShowError(c,"inavalid email address", fiber.StatusNotAcceptable)
+	}
 
-					userModel := model.User{
-						ID: id,
-						FullName: user.FullName,
-						Email: user.Email,
-						PhoneNumber: user.PhoneNumber,
-						CountryCode: user.CountryCode,
-						Password: hashed_password,
-					}
-					db.AutoMigrate(&userModel)
-					//create user
-					result = db.Create(&userModel)
-					if result.Error != nil {
-						return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{
-							"error":result.Error,
-						})
-					}
-					return c.Status(fiber.StatusOK).JSON(fiber.Map{"message":"user created successfully"})
-				}
-		
-			}
-		}
+	///check if the user is already registered
+	result :=db.Where("phone_number = ?",user.PhoneNumber).First(&user)
+	if result.Error == nil{
+		return utilities.ShowError(c,"User with this phone number already exists",fiber.StatusConflict)
+	}else if result.Error != gorm.ErrRecordNotFound{
+		return utilities.ShowError(c,"internal server error",fiber.ErrNotFound.Code)
+	}
+
+	//validate phone number
+	_,err := utilities.ValidatePhoneNumber(user.PhoneNumber,user.CountryCode)
+	if err !=nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusAccepted)
+	}
+
+	//comapare passwords
+	if user.ConfirmPassword != user.Password{
+		return utilities.ShowError(c,"passwords do not match",fiber.StatusForbidden)
+	}
 	
+	//hash password
+	hashed_password, _:= utilities.HashPassword(user.Password)
 
+	userModel := model.User{
+		ID: id,
+		FullName: user.FullName,
+		Email: user.Email,
+		PhoneNumber: user.PhoneNumber,
+		CountryCode: user.CountryCode,
+		Password: hashed_password,
+	}
+	db.AutoMigrate(&userModel)
+	//create user
+	result = db.Create(&userModel)
+	if result.Error != nil {
+		return utilities.ShowError(c, "failed to add data to the database",fiber.StatusInternalServerError)
+	}
+	return utilities.ShowMessage(c,"account created successfully",fiber.StatusOK)
 }
 

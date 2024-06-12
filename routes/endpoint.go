@@ -8,8 +8,8 @@ import (
 func EndPoints() {
 	app := fiber.New()
 	app.Post("/register",handler.CreateUserAccount)
-	app.Post("login",handler.Login)
-
+	app.Post("/login",handler.Login)
+	app.Post("/forgot-password",handler.ForgotPassword)
 	//start the server
 	app.Listen(":3000")
 }

@@ -1,20 +1,19 @@
 package handler
 
 import (
-
-	"time"
-
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 	"main.go/model"
 	"main.go/utilities"
-	"os"
-	"github.com/joho/godotenv"
-	"fmt"
+	"main.go/middleware"
 )
-
+type response_user struct{
+	FullName string 	`json:"full_name"`
+	PhoneNumber string 	`json:"phone_number"`
+	Email string 		`json:"email"`
+}
 
 func Login(c *fiber.Ctx)error{
+	
 	user := model.User{}
 	if err := c.BodyParser(&user); err !=nil {
 		return c.JSON(fiber.Map{"error":err.Error()})
@@ -24,38 +23,28 @@ func Login(c *fiber.Ctx)error{
 	result := db.Where("phone_number = ?",user.PhoneNumber).First(&existingUser)
 	if result.Error != nil {
 		//user not found
-		return c.JSON(fiber.Map{"error":"invalid credintials 1"})
-	}else{
-		//compare password
-		err :=utils.CompareHashAndPassowrd(existingUser.Password,user.Password)
-		if err !=nil{
-			return c.JSON(fiber.Map{"error":"invalid credintials 2"})
-		}else{
-			tokenString,err := GenerateJWT(c,existingUser.ID.String())
-			if err != nil{
-				return c.JSON(fiber.Map{"error":"failed to generate token"})
-			}else{
-				c.Set("Authorization","Bearer"+tokenString)
-				return c.JSON(fiber.Map{"message":"successfully logged in"})
-			}
-		}
+		return utilities.ShowError(c,"user does not exist",fiber.StatusInternalServerError)
 	}
+		
+	//compare password
+	err :=utilities.CompareHashAndPassowrd(existingUser.Password,user.Password)
+	if err !=nil{
+		return utilities.ShowError(c,"invalid credintials",fiber.StatusForbidden)
+			 
+	}
+	//generating token
+	tokenString,err := middleware.GenerateJWT(c,existingUser.ID.String())
+	if err != nil{
+		return utilities.ShowError(c,"failed to generate token",fiber.StatusInternalServerError)
+	}
+	response_user:=response_user{
+		FullName: existingUser.FullName,
+		PhoneNumber: existingUser.PhoneNumber,
+		Email: existingUser.Email,
+	}
+
+	//set the authorization header with the token
+	c.Set("Authorization","Bearer"+tokenString)
+	return utilities.ShowSuccess(c,"successfully logged in",fiber.StatusOK,response_user)	
 }
 
-func GenerateJWT(c *fiber.Ctx,id string)(string,error){
-	err := godotenv.Load(".env")
-	if err != nil {
-    fmt.Println(err)
-	}
-	my_secret_key := os.Getenv("MY_SECRET_KEY")
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256,jwt.MapClaims{
-		"user_id":"id",
-		"exp":time.Now().Add(time.Minute*60).Unix(),//expires after an hour
-	})
-	tokenString, err := token.SignedString([]byte(my_secret_key))
-	if err != nil {
-		return "", err
-	}else{
-		return tokenString, nil
-	}
-}
