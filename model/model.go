@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -12,5 +14,7 @@ type User struct{
 	CountryCode string 				`json:"country_code" gorm:"size:10"`
 	Password 	string 				`json:"password" gorm:"size:255"`
 	ConfirmPassword string 			`json:"confirm_password" gorm:"size:255"`
+	ResetCode	string				`json:"reset_code"`
+	CodeExpirationTime time.Time 	`json:"code_expiration_time"`
 }
 

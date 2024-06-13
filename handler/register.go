@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
+	//"github.com/jinzhu/gorm"
 	"main.go/database"
 	"main.go/model"
 	"main.go/utilities"
@@ -11,35 +11,28 @@ import (
 
 
 var db =database.ConnectDB()
-
+var country_code = "KE"
 
 func CreateUserAccount(c *fiber.Ctx) error {
 	//generating new id
 	id := uuid.New()
-	
+	db.AutoMigrate(&model.User{})
 	user:=model.User{}
 	if err :=c.BodyParser(&user); err != nil {
 		return c.JSON(fiber.Map{"error":err.Error()})
 	}
 
-
-	email:=user.Email
-	
 	//validate email address
-	if ! utilities.ValidateEmail(email){
+	if ! utilities.ValidateEmail(user.Email){
 		return utilities.ShowError(c,"inavalid email address", fiber.StatusNotAcceptable)
 	}
-
-	///check if the user is already registered
-	result :=db.Where("phone_number = ?",user.PhoneNumber).First(&user)
-	if result.Error == nil{
+	//Check if user exist
+	userExist,_,_ := model.UserExist(c,user.PhoneNumber)
+	if userExist{
 		return utilities.ShowError(c,"User with this phone number already exists",fiber.StatusConflict)
-	}else if result.Error != gorm.ErrRecordNotFound{
-		return utilities.ShowError(c,"internal server error",fiber.ErrNotFound.Code)
 	}
-
 	//validate phone number
-	_,err := utilities.ValidatePhoneNumber(user.PhoneNumber,user.CountryCode)
+	_,err := utilities.ValidatePhoneNumber(user.PhoneNumber,country_code)
 	if err !=nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusAccepted)
 	}
@@ -57,12 +50,12 @@ func CreateUserAccount(c *fiber.Ctx) error {
 		FullName: user.FullName,
 		Email: user.Email,
 		PhoneNumber: user.PhoneNumber,
-		CountryCode: user.CountryCode,
+		CountryCode: country_code,
 		Password: hashed_password,
+		ResetCode: "",
 	}
-	db.AutoMigrate(&userModel)
 	//create user
-	result = db.Create(&userModel)
+	result := db.Create(&userModel)
 	if result.Error != nil {
 		return utilities.ShowError(c, "failed to add data to the database",fiber.StatusInternalServerError)
 	}

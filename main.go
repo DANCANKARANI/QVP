@@ -1,9 +1,8 @@
 package main
 
 import (
-
-	"main.go/routes"
 	"main.go/database"
+	"main.go/routes"
 )
 
 

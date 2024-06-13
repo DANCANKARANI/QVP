@@ -18,18 +18,17 @@ func Login(c *fiber.Ctx)error{
 	if err := c.BodyParser(&user); err !=nil {
 		return c.JSON(fiber.Map{"error":err.Error()})
 	}
-	//check if the user exist
-	var existingUser model.User
-	result := db.Where("phone_number = ?",user.PhoneNumber).First(&existingUser)
-	if result.Error != nil {
-		//user not found
-		return utilities.ShowError(c,"user does not exist",fiber.StatusInternalServerError)
+
+	//check of user exist
+	userExist,_,existingUser:= model.UserExist(c,user.PhoneNumber)
+	if ! userExist {
+		return utilities.ShowError(c,"user does not exist",fiber.StatusNotFound)
 	}
-		
+	
 	//compare password
 	err :=utilities.CompareHashAndPassowrd(existingUser.Password,user.Password)
 	if err !=nil{
-		return utilities.ShowError(c,"invalid credintials",fiber.StatusForbidden)
+		return utilities.ShowError(c,err.Error(),fiber.StatusForbidden)
 			 
 	}
 	//generating token
