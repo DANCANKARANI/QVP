@@ -12,5 +12,11 @@ func EndPoints() {
 	app.Post("/forgot-password",handler.ForgotPassword)
 	app.Post("/reset-password",handler.ResetPassword)
 	//start the server
+
+	//JWT middleware
+	app.Use(handler.JWTMiddleware)
+	
+	//protected routes
+	app.Get("/logout",handler.Logout)
 	app.Listen(":3000")
 }

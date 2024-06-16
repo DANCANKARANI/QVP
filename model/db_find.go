@@ -1,7 +1,9 @@
 package model
 
 import (
+	"fmt"
 	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"main.go/database"
 	"main.go/utilities"
@@ -18,7 +20,7 @@ func UserExist(c *fiber.Ctx,phone_number string)(bool,error,User){
 	return true, nil,existingUser
 }
 
-func AddCode(c *fiber.Ctx,phone_number,email,code string,exp_time time.Time) error {
+func AddResetCode(c *fiber.Ctx,phone_number,email,code string,exp_time time.Time) error {
 	user := User{}
 	db.AutoMigrate(&user)
 	result:=db.Where("phone_number = ? AND email = ?",phone_number,email).First(&user)
@@ -41,4 +43,21 @@ func FindUser(email, phone_number string)(User,error){
 		return user,result.Error
 	}
 	return user,nil
+}
+
+func IsRevoked(tokenString string)bool{
+	result := db.Where("token = ?",tokenString).First(&RevokedToken{})
+	fmt.Println(result.Error != nil)
+	return result.Error != nil
+}
+
+func InvalidateToken(tokenString string)error{
+	result := db.Create(&RevokedToken{
+		Token: tokenString,
+		RevokedAt: time.Now(),
+	})
+	if result.Error != nil{
+		return result.Error
+	}
+	return nil
 }

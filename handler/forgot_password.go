@@ -26,10 +26,10 @@ func ForgotPassword(c *fiber.Ctx) error {
 	if err != nil {
 		return utilities.ShowError(c, "user does not exist",fiber.StatusNotFound)
 	}
-	
+
 	//generate code and expiration time
 	code,exp_time:=utilities.GenerateCode()
-	err = model.AddCode(c,user.PhoneNumber,user.Email,code,exp_time)
+	err = model.AddResetCode(c,user.PhoneNumber,user.Email,code,exp_time)
 	if err !=  nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}

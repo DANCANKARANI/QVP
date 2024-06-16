@@ -17,4 +17,7 @@ type User struct{
 	ResetCode	string				`json:"reset_code"`
 	CodeExpirationTime time.Time 	`json:"code_expiration_time"`
 }
-
+type RevokedToken struct{
+	Token string 			`json:"token" gorm:"primaryKey; size: 255"`
+	RevokedAt  time.Time 	`json:"revoked_at"`
+}

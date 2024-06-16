@@ -19,7 +19,7 @@ func CreateUserAccount(c *fiber.Ctx) error {
 	db.AutoMigrate(&model.User{})
 	user:=model.User{}
 	if err :=c.BodyParser(&user); err != nil {
-		return c.JSON(fiber.Map{"error":err.Error()})
+		return utilities.ShowError(c,"failed to parse JSON data", fiber.StatusInternalServerError)
 	}
 
 	//validate email address
@@ -45,15 +45,7 @@ func CreateUserAccount(c *fiber.Ctx) error {
 	//hash password
 	hashed_password, _:= utilities.HashPassword(user.Password)
 
-	userModel := model.User{
-		ID: id,
-		FullName: user.FullName,
-		Email: user.Email,
-		PhoneNumber: user.PhoneNumber,
-		CountryCode: country_code,
-		Password: hashed_password,
-		ResetCode: "",
-	}
+	userModel := model.User{ID: id,FullName: user.FullName,Email: user.Email,PhoneNumber: user.PhoneNumber,CountryCode: country_code,Password: hashed_password,ResetCode: "",}
 	//create user
 	result := db.Create(&userModel)
 	if result.Error != nil {

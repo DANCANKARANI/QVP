@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
+	"main.go/middleware"
 	"main.go/model"
 	"main.go/utilities"
-	"main.go/middleware"
 )
 type response_user struct{
 	FullName string 	`json:"full_name"`
@@ -13,7 +15,7 @@ type response_user struct{
 }
 
 func Login(c *fiber.Ctx)error{
-	
+	db.AutoMigrate(&model.RevokedToken{})
 	user := model.User{}
 	if err := c.BodyParser(&user); err !=nil {
 		return c.JSON(fiber.Map{"error":err.Error()})
@@ -31,10 +33,12 @@ func Login(c *fiber.Ctx)error{
 		return utilities.ShowError(c,err.Error(),fiber.StatusForbidden)
 			 
 	}
+	exp :=time.Hour*24
 	//generating token
-	tokenString,err := middleware.GenerateJWT(c,existingUser.ID.String())
+	//tokenString,err := middleware.GenerateJWT(c,existingUser.ID.String())
+	tokenString,err := middleware.GenerateToken(middleware.Claims{UserID: &existingUser.ID},exp)
 	if err != nil{
-		return utilities.ShowError(c,"failed to generate token",fiber.StatusInternalServerError)
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
 	response_user:=response_user{
 		FullName: existingUser.FullName,
@@ -43,7 +47,8 @@ func Login(c *fiber.Ctx)error{
 	}
 
 	//set the authorization header with the token
-	c.Set("Authorization","Bearer"+tokenString)
+	c.Set("Authorization",tokenString)
 	return utilities.ShowSuccess(c,"successfully logged in",fiber.StatusOK,response_user)	
 }
+
 
