@@ -1,6 +1,7 @@
-package handler
+package user_handler
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,14 +16,13 @@ type response_user struct{
 }
 
 func Login(c *fiber.Ctx)error{
-	db.AutoMigrate(&model.RevokedToken{})
 	user := model.User{}
 	if err := c.BodyParser(&user); err !=nil {
 		return c.JSON(fiber.Map{"error":err.Error()})
 	}
 
 	//check of user exist
-	userExist,_,existingUser:= model.UserExist(c,user.PhoneNumber)
+	userExist,existingUser,_:= model.UserExist(c,user.PhoneNumber)
 	if ! userExist {
 		return utilities.ShowError(c,"user does not exist",fiber.StatusNotFound)
 	}
@@ -51,4 +51,18 @@ func Login(c *fiber.Ctx)error{
 	return utilities.ShowSuccess(c,"successfully logged in",fiber.StatusOK,response_user)	
 }
 
+
+func Logout(c *fiber.Ctx) error {
+	tokenString,err :=utilities.GetJWTToken(c)
+	if err != nil {
+		return utilities.ShowError(c,err.Error(),fiber.StatusUnauthorized)
+	}
+	fmt.Println(tokenString)
+	err = middleware.InvalidateToken(tokenString)
+	if err != nil {
+		return utilities.ShowError(c,"failed to invalidate the token",fiber.StatusInternalServerError)
+	}
+	
+	return utilities.ShowMessage(c,"successfully logged out",fiber.StatusOK)
+}
 

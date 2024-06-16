@@ -1,25 +1,34 @@
 package model
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"main.go/database"
 	"main.go/utilities"
 )
 var db =database.ConnectDB()
-//find user using phone number only
-func UserExist(c *fiber.Ctx,phone_number string)(bool,error,User){
+/*
+finds user using phone number only
+@params phone_number
+*/
+func UserExist(c *fiber.Ctx,phone_number string)(bool,User,error){
 	 existingUser := User{}
 	result := db.Where("phone_number = ?",phone_number).First(&existingUser)
 	if result.Error != nil {
 		//user not found
-		return false,result.Error,existingUser
+		return false,existingUser,result.Error
 	}
-	return true, nil,existingUser
+	return true,existingUser, nil
 }
-
+/*
+updates the reset password code in the database
+@params phone_number
+@params email
+@params reset_code
+@paarams expiration_time
+*/
 func AddResetCode(c *fiber.Ctx,phone_number,email,code string,exp_time time.Time) error {
 	user := User{}
 	db.AutoMigrate(&user)
@@ -35,7 +44,11 @@ func AddResetCode(c *fiber.Ctx,phone_number,email,code string,exp_time time.Time
 	}
 	return utilities.ShowMessage(c,"code sent",fiber.StatusOK)
 }
-
+/*
+finds if the user with the given email and phone number is registered
+@params email
+@params phone_number
+*/
 func FindUser(email, phone_number string)(User,error){
 	user := User{}
 	result:=db.Where("phone_number = ? AND email = ?",phone_number,email).First(&user)
@@ -45,19 +58,28 @@ func FindUser(email, phone_number string)(User,error){
 	return user,nil
 }
 
-func IsRevoked(tokenString string)bool{
-	result := db.Where("token = ?",tokenString).First(&RevokedToken{})
-	fmt.Println(result.Error != nil)
-	return result.Error != nil
+/*
+finds dependants using phone number only
+@params phone_number
+*/
+func DependantExist(c *fiber.Ctx,phone_number string)(bool,Dependant,error){
+	existingDependant := Dependant{}
+   result := db.Where("phone_number = ?",phone_number).First(&existingDependant)
+   if result.Error != nil {
+	   //user not found
+	   return false,existingDependant,result.Error
+   }
+   return true,existingDependant, nil
 }
 
-func InvalidateToken(tokenString string)error{
-	result := db.Create(&RevokedToken{
-		Token: tokenString,
-		RevokedAt: time.Now(),
-	})
-	if result.Error != nil{
-		return result.Error
+/*
+get all the dependants for a specific user
+*/
+func GetAllDependants(c *fiber.Ctx,user_id uuid.UUID)(Dependant,error){
+	existingDependants := Dependant{}
+	result := db.Where("user_id = ?",user_id).Find(&existingDependants)
+	if result.Error !=nil{
+		return existingDependants,result.Error
 	}
-	return nil
+	return existingDependants,nil
 }

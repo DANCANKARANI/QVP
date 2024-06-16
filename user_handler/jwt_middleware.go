@@ -1,4 +1,4 @@
-package handler
+package user_handler
 
 import (
 	"fmt"
@@ -30,6 +30,6 @@ func JWTMiddleware(c *fiber.Ctx) error {
 		return utilities.ShowError(c,err.Error(),fiber.StatusUnauthorized)
 	}
 	//store the userID 
-	c.Locals("user_id",claims.UserID.String())
+	c.Locals("user_id",claims.UserID)
 	return c.Next()
 }
