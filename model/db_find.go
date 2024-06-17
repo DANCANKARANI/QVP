@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -75,11 +76,48 @@ func DependantExist(c *fiber.Ctx,phone_number string)(bool,Dependant,error){
 /*
 get all the dependants for a specific user
 */
-func GetAllDependants(c *fiber.Ctx,user_id uuid.UUID)(Dependant,error){
-	existingDependants := Dependant{}
-	result := db.Where("user_id = ?",user_id).Find(&existingDependants)
+func GetAllDependants(c *fiber.Ctx,user_id uuid.UUID)([]Dependant,error){
+	existingDependants := []Dependant{}
+	result := db.Preload("User").Where("user_id = ?",user_id).Find(&existingDependants)
 	if result.Error !=nil{
 		return existingDependants,result.Error
 	}
 	return existingDependants,nil
 }
+
+
+/*
+update the dependant details
+@params c *fiber.Ctx
+*/
+func GetDependantID(c *fiber.Ctx)(uuid.UUID,error){
+	dependant :=Dependant{}
+	if err := c.BodyParser(&dependant);err !=nil {
+		return  uuid.Nil,err
+	}
+	result :=db.Where("member_number =?",dependant.MemberNumber).First(&dependant)
+	if result.Error != nil{
+		return uuid.Nil,result.Error
+	}
+	
+	return dependant.ID,nil
+ }
+
+ /*
+ updates the dependants details
+ @params dependant_id
+ */
+ func UpdateDependant(c *fiber.Ctx, dependant_id uuid.UUID)(Dependant,error){
+	dependant := Dependant{}
+	result := db.First(&dependant,dependant_id)
+	if result.Error != nil {
+		return dependant,result.Error
+	}
+	body := Dependant{}
+	if err := c.BodyParser(&body); err != nil {
+		return dependant,errors.New("failed to parse json data")
+	}
+	dependant = body
+	db.Save(dependant)
+	return dependant,nil
+ }

@@ -4,10 +4,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
 )
 type User struct {
-    ID               uuid.UUID `gorm:"type:char(36);primary_key"`
+    ID               uuid.UUID `gorm:"type:varchar(36);primary_key"`
     FullName         string    `json:"full_name" gorm:"size:255"`
     Email            string    `json:"email" gorm:"size:255"`
     PhoneNumber      string    `json:"phone_number" gorm:"size:255"`
@@ -21,19 +20,22 @@ type User struct {
 }
 
 type Dependant struct {
-    ID          uuid.UUID `json:"id" gorm:"type:char(36);primary_key"`
+    ID          uuid.UUID `json:"id" gorm:"type:varchar(36);primary_key"`
     FullName    string    `json:"full_name" gorm:"size:255"`
     PhoneNumber string    `json:"phone_number" gorm:"size:255"`
     Relationship string   `json:"relationship" gorm:"size:50"`
     MemberNumber string   `json:"member_number" gorm:"size:255"`
     Status      string    `json:"status"`
-    InsuranceID uuid.UUID `json:"insurance_id" gorm:"type:char(36)"`
-    UserID      uuid.UUID `json:"user_id" gorm:"type:char(36)"`
-    Insurance   Insurance `gorm:"foreignKey:InsuranceID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-    User        User      `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+    UploadedDate time.Time `json:"uploaded_date"`
+    Comments  string      `json:"comments" gorm:"type:text"`
+    InsuranceID uuid.UUID `json:"insurance_id" gorm:"type:varchar(36)"`
+    UserID      uuid.UUID `json:"user_id" gorm:"type:varchar(36)"`
+    User        User      `json:"user"`
 }
 
 type Insurance struct {
-	gorm.Model
-    ID uuid.UUID `json:"id" gorm:"type:char(36);primary_key"`
+    ID uuid.UUID                `json:"id" gorm:"type:varchar(36);primary_key"`
+    InsuranceName string        `json:"insurance_name" gomr:"type:varchar(50);not null"`
+    PhotoPath string            `json:"photo_path" gorm:"size:1024"`
+    Dependants     []Dependant  `gorm:"foreignKey:InsuranceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }

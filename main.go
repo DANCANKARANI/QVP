@@ -7,7 +7,7 @@ import (
 
 
 func main() {
-	
+	database.RedisClient()
 	database.ConnectDB()
 	routes.EndPoints()
 }
