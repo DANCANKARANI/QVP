@@ -16,7 +16,6 @@ var country_code = "KE"
 func CreateUserAccount(c *fiber.Ctx) error {
 	//generating new id
 	id := uuid.New()
-	db.AutoMigrate(&model.User{},&model.Dependant{})
 	user:=model.User{}
 	if err :=c.BodyParser(&user); err != nil {
 		return utilities.ShowError(c,"failed to parse JSON data", fiber.StatusInternalServerError)

@@ -1,8 +1,6 @@
 package user_handler
 
 import (
-	"fmt"
-
 	"github.com/gofiber/fiber/v2"
 	"main.go/model"
 	"main.go/utilities"
@@ -35,10 +33,8 @@ func ForgotPassword(c *fiber.Ctx) error {
 	}
 
 	//send the code password reset code
-	err =utilities.SendEmail(user.Email,code,exp_time)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	go utilities.SendEmail(user.Email,code,exp_time)
+	
 	return utilities.ShowSuccess(c,"link sent to your email",fiber.StatusOK,User{found_user.FullName,found_user.Email,found_user.PhoneNumber})
 }
 

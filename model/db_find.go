@@ -107,17 +107,19 @@ func GetDependantID(c *fiber.Ctx)(uuid.UUID,error){
  updates the dependants details
  @params dependant_id
  */
- func UpdateDependant(c *fiber.Ctx, dependant_id uuid.UUID)(Dependant,error){
-	dependant := Dependant{}
-	result := db.First(&dependant,dependant_id)
-	if result.Error != nil {
-		return dependant,result.Error
-	}
+ func UpdateDependant(c *fiber.Ctx, dependant_id string)(*Dependant,error){
 	body := Dependant{}
 	if err := c.BodyParser(&body); err != nil {
-		return dependant,errors.New("failed to parse json data")
+		return &Dependant{},errors.New("failed to parse json data")
 	}
-	dependant = body
-	db.Save(dependant)
-	return dependant,nil
+	
+	result := db.Model(&Dependant{}).Where("id = ?", dependant_id).Updates(&body)
+	if result.Error != nil {
+		return &Dependant{},result.Error
+	}
+	response := ResponseDependant{}
+	db.First(&Dependant{}).Where("id = ?",dependant_id).Scan(&response)
+	return &response,nil
  }
+
+ 

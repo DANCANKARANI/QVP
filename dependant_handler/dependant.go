@@ -20,7 +20,12 @@ type ResponseDependant struct{
 	Status 		string 			`json:"status"`
 	InsuranceID uuid.UUID		`json:"insurance_id"`
 	UserID	uuid.UUID			`json:"user_id"`
-	User 	model.User			
+	User 	ResponseUser			
+}
+type ResponseUser struct{
+	FullName	string `json:"full_name"`
+	Email 		string 	`json:"email"`
+	PhoneNumber	string `json:"phone_number"`
 }
 
 func RegisterDependantAccount(c *fiber.Ctx) error {
@@ -78,7 +83,7 @@ func GetDependantsHandler(c *fiber.Ctx)error{
 	//response
 	var response []ResponseDependant
     for _, dependant := range existingDependants {
-        resUser := model.User{
+        resUser := ResponseUser{
             FullName:    dependant.User.FullName,
             PhoneNumber: dependant.User.PhoneNumber,
             Email:      dependant.User.Email,
@@ -98,8 +103,7 @@ func GetDependantsHandler(c *fiber.Ctx)error{
 		
         response = append(response, responseDependant)
     }
-	did:=c.Locals("d_id")
-	return utilities.ShowSuccess(c, did, fiber.StatusOK, response)
+	return utilities.ShowSuccess(c, "dependants successfully retrieved", fiber.StatusOK, response)
 }
 
 //get user id to set in the url
