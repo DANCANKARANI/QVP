@@ -63,63 +63,12 @@ func FindUser(email, phone_number string)(User,error){
 finds dependants using phone number only
 @params phone_number
 */
-func DependantExist(c *fiber.Ctx,phone_number string)(bool,Dependant,error){
-	existingDependant := Dependant{}
-   result := db.Where("phone_number = ?",phone_number).First(&existingDependant)
-   if result.Error != nil {
-	   //user not found
-	   return false,existingDependant,result.Error
-   }
-   return true,existingDependant, nil
+func GetAuthUserID(c *fiber.Ctx)(uuid.UUID,error){
+	user_id :=c.Locals("user_id")
+	id,ok := user_id.(*uuid.UUID)
+	if !ok{
+		return uuid.Nil,errors.New("failed converting user_id to uuid")
+	}
+	user_id=*id
+	return user_id.(uuid.UUID),nil
 }
-
-/*
-get all the dependants for a specific user
-*/
-func GetAllDependants(c *fiber.Ctx,user_id uuid.UUID)([]Dependant,error){
-	existingDependants := []Dependant{}
-	result := db.Preload("User").Where("user_id = ?",user_id).Find(&existingDependants)
-	if result.Error !=nil{
-		return existingDependants,result.Error
-	}
-	return existingDependants,nil
-}
-
-
-/*
-update the dependant details
-@params c *fiber.Ctx
-*/
-func GetDependantID(c *fiber.Ctx)(uuid.UUID,error){
-	dependant :=Dependant{}
-	if err := c.BodyParser(&dependant);err !=nil {
-		return  uuid.Nil,err
-	}
-	result :=db.Where("member_number =?",dependant.MemberNumber).First(&dependant)
-	if result.Error != nil{
-		return uuid.Nil,result.Error
-	}
-	
-	return dependant.ID,nil
- }
-
- /*
- updates the dependants details
- @params dependant_id
- */
- func UpdateDependant(c *fiber.Ctx, dependant_id string)(*Dependant,error){
-	body := Dependant{}
-	if err := c.BodyParser(&body); err != nil {
-		return &Dependant{},errors.New("failed to parse json data")
-	}
-	
-	result := db.Model(&Dependant{}).Where("id = ?", dependant_id).Updates(&body)
-	if result.Error != nil {
-		return &Dependant{},result.Error
-	}
-	response := ResponseDependant{}
-	db.First(&Dependant{}).Where("id = ?",dependant_id).Scan(&response)
-	return &response,nil
- }
-
- 

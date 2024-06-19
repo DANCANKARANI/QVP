@@ -43,17 +43,19 @@ deletes the payment method
 @params payment_method_id
 */
 
-func DeletePaymentMethod(c *fiber.Ctx, payment_method_id string) error {
-	result := db.Model(&PaymentMethod{}).Where("id = ?", payment_method_id)
+func DeletePaymentMethod(c *fiber.Ctx, payment_method_id uuid.UUID) error {
+	payment_method :=PaymentMethod{}
+	result := db.First(&payment_method,"id = ?", payment_method_id)
 	if result.Error !=nil {
-		return result.Error
+		return	errors.New("failed to delete payment method: "+ result.Error.Error())
 	}
-	db.Delete(&PaymentMethod{})
+	db.Delete(&payment_method)
 	return nil
 }
 
 /*
 returns the payments all methods
+@params c*fiber.Ctx
 */
 
 func GetPaymentMethods(c *fiber.Ctx)([]PaymentMethod,error){

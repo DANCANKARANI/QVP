@@ -1,8 +1,6 @@
 package dependant_handler
 
 import (
-	"time"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"main.go/database"
@@ -30,7 +28,6 @@ type ResponseUser struct{
 
 func RegisterDependantAccount(c *fiber.Ctx) error {
 	db.AutoMigrate(&model.Dependant{})
-	ID:=uuid.New()
 	body :=model.Dependant{}
 	if err := c.BodyParser(&body); err !=nil {
 		return c.JSON(fiber.Map{"error":err.Error()})
@@ -41,30 +38,18 @@ func RegisterDependantAccount(c *fiber.Ctx) error {
 		return utilities.ShowError(c,"User with this phone number already exists",fiber.StatusConflict)
 	}
 	//validate phone number
-	_,err := utilities.ValidatePhoneNumber(body.PhoneNumber,country_code)
-	if err !=nil{
-		return utilities.ShowError(c,err.Error(),fiber.StatusAccepted)
+	if body.PhoneNumber != ""{
+		_,err := utilities.ValidatePhoneNumber(body.PhoneNumber,country_code)
+		if err !=nil{
+			return utilities.ShowError(c,err.Error(),fiber.StatusAccepted)
+		}
 	}
-	user_id :=c.Locals("user_id")
-	id,ok := user_id.(*uuid.UUID)
-	if !ok{
-		return utilities.ShowError(c,"failed conversion",fiber.StatusInternalServerError)
+	//adding the dependant
+	err := model.AddDependant(c)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
-	user_id=*id
-	result :=db.Create(&model.Dependant{
-		ID: ID,
-		FullName: body.FullName,
-		PhoneNumber: body.PhoneNumber,
-		Relationship: body.Relationship,
-		MemberNumber: body.MemberNumber,
-		Status: body.Status,
-		UploadedDate: time.Now(),
-		UserID:user_id.(uuid.UUID),
-	})
-	if result.Error != nil {
-		return utilities.ShowError(c,"failed to register the dependant",fiber.StatusInternalServerError)
-	}
-	return utilities.ShowMessage(c,"dependant registered successfully",fiber.StatusOK)
+	return utilities.ShowError(c,"dependant added successfully",fiber.StatusOK)
 }
 
 //get dependants handler
@@ -114,4 +99,14 @@ func GetDependantID(c *fiber.Ctx)error{
 	}
 
 	return utilities.ShowMessage(c,dependant_id.String(),fiber.StatusOK)
+}
+//delete the dependant
+func DeleteDependantHandler(c *fiber.Ctx)error{
+	dependant_id := c.Query("id")
+	id,_:=uuid.Parse(dependant_id)
+	err := model.DeleteDependant(c, id)
+	if err != nil {
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	return utilities.ShowMessage(c,"dependant deleted successfully",fiber.StatusOK)
 }

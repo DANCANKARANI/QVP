@@ -23,11 +23,18 @@ func EndPoints() {
 	app.Get("/get-dependants",dependant_handler.GetDependantsHandler)
 	app.Get("/get-dependant-id",dependant_handler.GetDependantID)
 	app.Post("/update/dependants",dependant_handler.UpdateDependant)
+	app.Delete("/delete/dependant",dependant_handler.DeleteDependantHandler)
+
+	//payment_methods routes
 	app.Post("/add/payment-method",payment_handler.AddPaymentMethod)
 	app.Post("/update/payment-method",payment_handler.UpdatePaymentMethod)
 	app.Get("/get/payment-method",payment_handler.GetPaymentMethods)
+	app.Delete("/delete/payment-method",payment_handler.RemovePaymentMethod)
+	//payments routes
+	app.Post("/add/payment", payment_handler.AddPaymentHandler)
+	app.Get("/get/payments",payment_handler.GetPaymentsHandler)
+
 	app.Get("/logout",user_handler.Logout)
-	app.Delete("delete/payment-method",payment_handler.RemovePaymentMethod)
 
 	app.Listen(":3000")
 }

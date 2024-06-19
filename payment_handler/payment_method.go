@@ -34,9 +34,10 @@ func UpdatePaymentMethod(c *fiber.Ctx)error{
 //deleting the payment method
 func RemovePaymentMethod(c *fiber.Ctx)error{
 	payment_method_id:=c.Query("id")
-	err :=model.DeletePaymentMethod(c,payment_method_id)
+	id,_ :=uuid.Parse(payment_method_id)
+	err :=model.DeletePaymentMethod(c,id)
 	if err != nil {
-		return utilities.ShowError(c,"failed to remove the payment method",fiber.StatusInternalServerError)
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
 	return utilities.ShowMessage(c,"payment method removed successfully",fiber.StatusOK)
 }
