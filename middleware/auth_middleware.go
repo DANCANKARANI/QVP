@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"time"
 	"github.com/dgrijalva/jwt-go"
@@ -17,12 +16,11 @@ type Claims struct {
 	UserID *uuid.UUID `json:"user_id"`
 	jwt.StandardClaims
 }
-
 //the function loads .env and return the secretKey
 func LoadSecretKey()string{
 	err := godotenv.Load(".env")
 	if err != nil {
-		fmt.Println(err)
+		return err.Error()
 	}
 	my_secret_key := os.Getenv("MY_SECRET_KEY")
 	return my_secret_key
@@ -86,6 +84,11 @@ func InvalidateToken(tokenString string)error{
 	}
 	return nil
 }
+
+/*
+gets the users id from the token
+@params claims *Claims
+*/
 func GetAuthUserID(c *fiber.Ctx,claims *Claims)(*uuid.UUID,error){
 	if claims == nil{
 		return nil, errors.New("unauthorized user denied. user details not found")

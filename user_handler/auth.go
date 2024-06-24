@@ -9,7 +9,7 @@ import (
 	"main.go/model"
 	"main.go/utilities"
 )
-type response_user struct{
+type ResponseUser struct{
 	FullName string 	`json:"full_name"`
 	PhoneNumber string 	`json:"phone_number"`
 	Email string 		`json:"email"`
@@ -40,7 +40,7 @@ func Login(c *fiber.Ctx)error{
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
-	response_user:=response_user{
+	response_user:=ResponseUser{
 		FullName: existingUser.FullName,
 		PhoneNumber: existingUser.PhoneNumber,
 		Email: existingUser.Email,

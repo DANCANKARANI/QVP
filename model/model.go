@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 )
+
 type User struct {
     ID               uuid.UUID `gorm:"type:varchar(36);primary_key"`
     FullName         string    `json:"full_name" gorm:"size:255"`
@@ -59,14 +60,5 @@ type PaymentMethod struct {
     IconUrl string        `json:"icon_url" gorm:"type:varchar(1024)"`
     Payments []Payment    `gorm:"foreignKey:PaymentMethodID;constraint:OnUpdate:CASCADE;OnDelete:SET NULL;reference:ID"`
 }
-type ResponseDependant struct{
-	ID		uuid.UUID			`json:"id"`
-	FullName 	string			`json:"full_name"`
-	PhoneNumber string 			`json:"phone_number"`
-	Relationship string 		`json:"relationship"`
-	MemberNumber string 		`json:"member_number"`
-	Status 		string 			`json:"status"`
-	InsuranceID uuid.UUID		`json:"insurance_id"`
-	UserID	uuid.UUID			`json:"user_id"`			
-}
+
 

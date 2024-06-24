@@ -2,11 +2,9 @@ package payment_handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"main.go/model"
 	"main.go/utilities"
 )
-
 //adding payment handler
 func AddPaymentHandler(c *fiber.Ctx)error{
 	err := model.AddPayment(c)
@@ -16,34 +14,50 @@ func AddPaymentHandler(c *fiber.Ctx)error{
 	return utilities.ShowMessage(c,"payments added successfully",fiber.StatusOK)
 }
 
-func UpdatePaymentHandler(c *fiber.Ctx)error{
-	payment_id,_ :=uuid.Parse(c.Query("payment_id"))
-	updated_payment,err :=model.UpdatePayment(c,payment_id)
-	if err != nil{
-		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
-	}
-	return utilities.ShowSuccess(c,"successfully updated",fiber.StatusOK,updated_payment)
-}
-
-func GetPaymentsHandler(c *fiber.Ctx)error{
-	payments,err:=model.GetPayments(c)
+//get payments made by specific user
+func GetUserPaymentsHandler(c *fiber.Ctx)error{
+	response,err:=model.GetUserPayments(c)
 	if err!=nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
-	var response []model.Payment
-	for _,payment:=range payments{
-		resPayment:=model.Payment{
-			ID:payment.ID,
-			Amount: payment.Amount,
-			Narration: payment.Narration,
-			Reference: payment.Reference,
-			ResponseDescription: payment.ResponseDescription,
-			UserID: payment.UserID,
-			PaymentMethodID: payment.PaymentMethodID,
-			User: payment.User,
-			PaymentMethod: payment.PaymentMethod,
-		}
-		response = append(response, resPayment)
+	return utilities.ShowSuccess(c,"successfully retrieved the payments details",fiber.StatusOK,response)
+}
+
+//get payments made by specific payment_method
+func GetPaymentMethodPaymentsHandler(c *fiber.Ctx)error{
+	response,err:=model.GetPaymentMethodPayments(c)
+	if err!=nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
 	return utilities.ShowSuccess(c,"successfully retrieved the payments details",fiber.StatusOK,response)
+}
+
+
+//getting all payments
+func GetAllPaymentsHandler(c *fiber.Ctx)error{
+	user_id,_:=model.GetAuthUserID(c)
+	payments,err := model.GetAllPayments(c,user_id)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	
+	return utilities.ShowSuccess(c,"successfully retrieved payments",fiber.StatusOK,payments)
+}
+
+//update payment handler
+func UpdatePaymentHandler(c *fiber.Ctx)error{
+	payment,err:=model.UpdatePayment(c)
+	if err != nil {
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	return utilities.ShowSuccess(c,"successfully updated payments",fiber.StatusOK,payment)
+}
+
+//deletes a row of a payment
+func DeletePaymentHandler(c *fiber.Ctx)error{
+	err:=model.DeletePayment(c)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	return utilities.ShowMessage(c,"record deleted",fiber.StatusOK)
 }

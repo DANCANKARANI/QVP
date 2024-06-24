@@ -3,7 +3,6 @@ package model
 import (
 	"errors"
 	"time"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"main.go/database"

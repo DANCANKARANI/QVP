@@ -8,6 +8,20 @@ import (
 /*
 finds if the dependant already exists using the phone number
 */
+
+type ResponseDependant struct{
+	ID		uuid.UUID			`json:"id"`
+	FullName 	string			`json:"full_name"`
+	PhoneNumber string 			`json:"phone_number"`
+	Relationship string 		`json:"relationship"`
+	MemberNumber string 		`json:"member_number"`
+	Status 		string 			`json:"status"`
+	InsuranceID uuid.UUID		`json:"insurance_id"`
+	UserID	uuid.UUID			`json:"user_id"`
+    User    ResponseUser
+    Insurance ResInsurance			
+}
+
 func DependantExist(c *fiber.Ctx,phone_number string)(bool,Dependant,error){
 	existingDependant := Dependant{}
    result := db.Where("phone_number = ?",phone_number).First(&existingDependant)
@@ -41,13 +55,42 @@ func AddDependant(c *fiber.Ctx)error{
 /*
 get all the dependants for a specific user
 */
-func GetAllDependants(c *fiber.Ctx,user_id uuid.UUID)([]Dependant,error){
-	existingDependants := []Dependant{}
-	result := db.Preload("User").Where("user_id = ?",user_id).Find(&existingDependants)
-	if result.Error !=nil{
-		return existingDependants,result.Error
-	}
-	return existingDependants,nil
+func GetAllDependants(c *fiber.Ctx,user_id uuid.UUID)(*[]ResponseDependant,error){
+	var dependants []Dependant
+    if err := db.Preload("User").Preload("Insurance").
+        Where("user_id = ?", user_id).Find(&dependants).Error; err != nil {
+        return nil,errors.New("failed to get data:"+err.Error())
+    }
+	var response []ResponseDependant
+    for _, dependant := range dependants {
+        resUser := ResponseUser{
+			ID: dependant.User.ID,
+            FullName:    dependant.User.FullName,
+            PhoneNumber: dependant.User.PhoneNumber,
+            Email:      dependant.User.Email,
+        }
+		resInsurance :=ResInsurance{
+			ID: dependant.Insurance.ID,
+			InsuranceName: dependant.Insurance.InsuranceName,
+			PhotoPath: dependant.Insurance.PhotoPath,
+			Description: dependant.Insurance.Description,
+		}
+        responseDependant := ResponseDependant{
+            ID:           dependant.ID,
+            FullName:     dependant.FullName,
+            PhoneNumber:  dependant.PhoneNumber,
+            Status:       dependant.Status,
+            Relationship: dependant.Relationship,
+            UserID:       dependant.UserID,
+            MemberNumber: dependant.MemberNumber,
+            InsuranceID:  dependant.InsuranceID,
+            User:         resUser,
+			Insurance: resInsurance,
+        }
+		
+        response = append(response, responseDependant)
+    }
+	return &response,nil
 }
 
 
@@ -80,7 +123,7 @@ func GetDependantID(c *fiber.Ctx)(uuid.UUID,error){
 	
 	result := db.Model(&Dependant{}).Where("id = ?", dependant_id).Updates(&body)
 	if result.Error != nil {
-		return &ResponseDependant{},result.Error
+		return nil,result.Error
 	}
 	response := ResponseDependant{}
 	db.First(&Dependant{}).Where("id = ?",dependant_id).Scan(&response)

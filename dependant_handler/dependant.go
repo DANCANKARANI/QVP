@@ -9,22 +9,7 @@ import (
 )
 var db = database.ConnectDB()
 var country_code = "KE"
-type ResponseDependant struct{
-	ID		uuid.UUID			`json:"id"`
-	FullName 	string			`json:"full_name"`
-	PhoneNumber string 			`json:"phone_number"`
-	Relationship string 		`json:"relationship"`
-	MemberNumber string 		`json:"member_number"`
-	Status 		string 			`json:"status"`
-	InsuranceID uuid.UUID		`json:"insurance_id"`
-	UserID	uuid.UUID			`json:"user_id"`
-	User 	ResponseUser			
-}
-type ResponseUser struct{
-	FullName	string `json:"full_name"`
-	Email 		string 	`json:"email"`
-	PhoneNumber	string `json:"phone_number"`
-}
+
 
 func RegisterDependantAccount(c *fiber.Ctx) error {
 	db.AutoMigrate(&model.Dependant{})
@@ -61,34 +46,13 @@ func GetDependantsHandler(c *fiber.Ctx)error{
 		return utilities.ShowError(c,"failed conversion",fiber.StatusInternalServerError)
 	}
 	user_id=*id
-	existingDependants,err := model.GetAllDependants(c,user_id.(uuid.UUID))
+	dependants,err := model.GetAllDependants(c,user_id.(uuid.UUID))
 	if err != nil{
 		return utilities.ShowError(c,"The user has no dependants",fiber.StatusInternalServerError)
 	}
 	//response
-	var response []ResponseDependant
-    for _, dependant := range existingDependants {
-        resUser := ResponseUser{
-            FullName:    dependant.User.FullName,
-            PhoneNumber: dependant.User.PhoneNumber,
-            Email:      dependant.User.Email,
-        }
-
-        responseDependant := ResponseDependant{
-            ID:           dependant.ID,
-            FullName:     dependant.FullName,
-            PhoneNumber:  dependant.PhoneNumber,
-            Status:       dependant.Status,
-            Relationship: dependant.Relationship,
-            UserID:       dependant.UserID,
-            MemberNumber: dependant.MemberNumber,
-            InsuranceID:  dependant.InsuranceID,
-            User:         resUser,
-        }
-		
-        response = append(response, responseDependant)
-    }
-	return utilities.ShowSuccess(c, "dependants successfully retrieved", fiber.StatusOK, response)
+	
+	return utilities.ShowSuccess(c, "dependants successfully retrieved", fiber.StatusOK, &dependants)
 }
 
 //get user id to set in the url

@@ -8,7 +8,6 @@ import (
 
 
 func main() {
-	database.RedisClient()
 	database.ConnectDB()
 	model.Migration()
 	routes.EndPoints()
