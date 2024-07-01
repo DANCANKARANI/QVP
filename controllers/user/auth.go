@@ -1,4 +1,4 @@
-package user_handler
+package user
 
 import (
 	"fmt"
@@ -13,6 +13,9 @@ type ResponseUser struct{
 	FullName string 	`json:"full_name"`
 	PhoneNumber string 	`json:"phone_number"`
 	Email string 		`json:"email"`
+}
+type loginResponse struct {
+	Token string `json:"token"`
 }
 
 func Login(c *fiber.Ctx)error{
@@ -35,22 +38,24 @@ func Login(c *fiber.Ctx)error{
 	}
 	exp :=time.Hour*24
 	//generating token
-	//tokenString,err := middleware.GenerateJWT(c,existingUser.ID.String())
 	tokenString,err := middleware.GenerateToken(middleware.Claims{UserID: &existingUser.ID},exp)
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
-	response_user:=ResponseUser{
-		FullName: existingUser.FullName,
-		PhoneNumber: existingUser.PhoneNumber,
-		Email: existingUser.Email,
+	//set token cookie 
+	c.Cookie(&fiber.Cookie{
+		Name:     "Authorization",
+		Value:    tokenString,
+		Expires:  time.Now().Add(time.Hour * 24), // Same duration as the token
+		HTTPOnly: true, // Important for security, prevents JavaScript access
+		Secure:   true, // Use secure cookies in production
+		Path:     "/",  // Make the cookie available on all routes
+	})
+	response_user:=loginResponse{
+		Token: tokenString,
 	}
-
-	//set the authorization header with the token
-	c.Set("Authorization",tokenString)
 	return utilities.ShowSuccess(c,"successfully logged in",fiber.StatusOK,response_user)	
 }
-
 
 func Logout(c *fiber.Ctx) error {
 	tokenString,err :=utilities.GetJWTToken(c)

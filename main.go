@@ -1,14 +1,12 @@
 package main
 
-import (
-	"main.go/database"
+import(
+	"main.go/endpoints"
 	"main.go/model"
-	"main.go/routes"
 )
 
-
 func main() {
-	database.ConnectDB()
+	endpoints.CreateEndpoint()
 	model.Migration()
-	routes.EndPoints()
+	//pkg.Start()
 }

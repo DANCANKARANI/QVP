@@ -1,4 +1,4 @@
-package payment_handler
+package payment
 
 import (
 	"github.com/gofiber/fiber/v2"

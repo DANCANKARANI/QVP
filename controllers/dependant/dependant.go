@@ -1,4 +1,4 @@
-package dependant_handler
+package dependant
 
 import (
 	"github.com/gofiber/fiber/v2"

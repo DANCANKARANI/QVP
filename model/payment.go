@@ -110,16 +110,13 @@ func GetAllPayments(c *fiber.Ctx,user_id uuid.UUID)(*[]ResponsePayment,error){
 updates the payment details
 */
 func UpdatePayment(c *fiber.Ctx)(*ResponsePayment,error){
-	payment_id,err:=uuid.Parse(c.Query("id"))
-	if err != nil {
-		return nil,err
-	}
+	payment_id :=c.Params("id")
 	body := Payment{}
 	response := ResponsePayment{}
 	if err := c.BodyParser(&body); err != nil {
 		return nil,errors.New("failed to parse json data:"+err.Error())
 	}
-	err = db.First(&Payment{},"id = ?",payment_id).Updates(&body).Scan(&response).Error
+	err := db.First(&Payment{},"id = ?",payment_id).Updates(&body).Scan(&response).Error
 	if err != nil {
 		return nil,errors.New("failed to update payment:"+err.Error())
 	}
@@ -129,11 +126,8 @@ func UpdatePayment(c *fiber.Ctx)(*ResponsePayment,error){
 deletes a specified raw
 */
 func DeletePayment(c *fiber.Ctx)error{
-	payment_id,err:=uuid.Parse(c.Query("id"))
-	if err != nil {
-		return err
-	}
-	err =db.Model(&Payment{}).Where("id = ?",payment_id).Delete(&Payment{}).Error
+	payment_id := c.Params("id")
+	err :=db.Model(&Payment{}).Where("id = ?",payment_id).Delete(&Payment{}).Error
 	if err != nil {
 		return errors.New("failed to delete the record:"+err.Error())
 	}

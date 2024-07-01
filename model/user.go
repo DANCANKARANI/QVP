@@ -2,7 +2,7 @@ package model
 
 import (
 	"errors"
-
+	"main.go/utilities"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -45,13 +45,36 @@ func UpdateUser(c *fiber.Ctx)(*ResponseUser,error){
 		return nil,errors.New("failed to get user's id:"+err.Error())
 	}
 	body := User{}
+	imageURL,err := utilities.GenerateImageUrl(c)
+	if err != nil {
+		return nil, err
+	}
 	if err = c.BodyParser(&body);err != nil {
 		return nil,errors.New("failed to parse:"+err.Error())
 	}
 	response := ResponseUser{}
+	body.ProfilePhotoPath=imageURL
 	err = db.First(&User{},"id = ?",id).Updates(&body).Scan(&response).Error
 	if err != nil {
 		return nil,errors.New("error in updating the user:"+err.Error())
 	}
 	return &response,nil
+}
+
+func AddProfileImage(c *fiber.Ctx)error{
+	id,err:=GetAuthUserID(c)
+	if err != nil {
+		return errors.New("failed to get user's id:"+err.Error())
+	}
+	imageURL,err := utilities.GenerateImageUrl(c)
+	if err != nil {
+		return err
+	}
+	body := User{}
+	body.ProfilePhotoPath=imageURL
+	err = db.First(&User{},"id = ?",id).Updates(&body).Error
+	if err != nil {
+		return errors.New("failed to add profile")
+	}
+	return nil
 }

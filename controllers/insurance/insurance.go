@@ -1,4 +1,4 @@
-package insurance_handler
+package insurance
 
 import (
 	"github.com/gofiber/fiber/v2"

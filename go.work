@@ -1,0 +1,6 @@
+go 1.22.4
+
+use (
+	.
+	..\Users\user\go\pkg\mod\github.com\gofiber\fiber@v1.14.6
+)

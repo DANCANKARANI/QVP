@@ -1,6 +1,10 @@
 package utilities
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"errors"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 /*compares the parsed password with the password from the database
 @params hashedPassword
@@ -9,7 +13,7 @@ import "golang.org/x/crypto/bcrypt"
 func CompareHashAndPassowrd(hashedPassword ,parsedPassword string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword),[]byte(parsedPassword))
 	if err != nil {
-		return err
+		return errors.New("invalid password")
 	}else{
 		return nil
 	}

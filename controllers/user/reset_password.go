@@ -1,4 +1,4 @@
-package user_handler
+package user
 
 import (
 	//"time"
