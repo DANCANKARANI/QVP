@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"main.go/middleware"
-	"main.go/model"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/middleware"
+	"github.com/DANCANKARANI/QVP/model"
+	"github.com/DANCANKARANI/QVP/utilities"
 )
 type ResponseUser struct{
 	FullName string 	`json:"full_name"`
@@ -25,13 +25,14 @@ func Login(c *fiber.Ctx)error{
 	}
 
 	//check of user exist
-	userExist,existingUser,_:= model.UserExist(c,user.PhoneNumber)
+	userExist,existingUser,err:= model.UserExist(c,user.PhoneNumber)
+	fmt.Println(user.PhoneNumber+"1",existingUser.PhoneNumber+"2")
 	if ! userExist {
-		return utilities.ShowError(c,"user does not exist",fiber.StatusNotFound)
+		return utilities.ShowError(c,err.Error(),fiber.StatusNotFound)
 	}
 	
 	//compare password
-	err :=utilities.CompareHashAndPassowrd(existingUser.Password,user.Password)
+	err =utilities.CompareHashAndPassowrd(existingUser.Password,user.Password)
 	if err !=nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusForbidden)
 			 

@@ -2,7 +2,7 @@ package model
 
 import (
 	"errors"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )

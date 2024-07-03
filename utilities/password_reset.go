@@ -39,8 +39,8 @@ func SendEmail(email, resetCode string, exp_time time.Time) error {
         body)
 
     // Create the "from" address
-    fromAddr := mail.Address{Name: "Dancan", Address: from}
-
+   // fromAddr := mail.Address{Name: "Dancan", Address: from}
+   fromAddr := mail.Address{ Address: from}
     // Establish a connection to the SMTP server
     auth := smtp.PlainAuth("", from, password, smtpHost)
     err = smtp.SendMail(smtpHost+":"+smtpPort, auth, fromAddr.Address, []string{email}, msg)

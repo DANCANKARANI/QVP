@@ -2,8 +2,8 @@ package user
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/model"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/model"
+	"github.com/DANCANKARANI/QVP/utilities"
 )
 //get one user handler
 func GetOneUserHandler(c *fiber.Ctx) error {

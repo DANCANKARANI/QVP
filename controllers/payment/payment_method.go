@@ -3,8 +3,8 @@ package payment
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"main.go/model"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/model"
+	"github.com/DANCANKARANI/QVP/utilities"
 )
 var body = model.PaymentMethod{}
 //add payment handler

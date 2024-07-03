@@ -6,7 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/utilities"
 )
 
 /*

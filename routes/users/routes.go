@@ -2,7 +2,7 @@ package users
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/controllers/user"
+	"github.com/DANCANKARANI/QVP/controllers/user"
 )
 
 func SetUserRoutes(app *fiber.App) {

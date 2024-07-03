@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"main.go/database"
-	"main.go/model"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/database"
+	"github.com/DANCANKARANI/QVP/model"
+	"github.com/DANCANKARANI/QVP/utilities"
 )
 var db = database.ConnectDB()
 func ResetPassword(c *fiber.Ctx,email, phone_number,password,code string) {

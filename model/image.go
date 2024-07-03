@@ -17,8 +17,9 @@ func SanitizeFileName(fileName string) string {
 }
 
 func UploadImage(c *fiber.Ctx,file *multipart.FileHeader)(*Image,error){
-
+	id :=uuid.New()
 	image := Image{
+		ID : id,
 		OriginalName: file.Filename,
 		Type: file.Header.Get("Content-Type"),
 	}
@@ -27,17 +28,18 @@ func UploadImage(c *fiber.Ctx,file *multipart.FileHeader)(*Image,error){
 		return nil,errors.New("failed to save the file")
 	}
 	image.Path = "./uploads/"+file.Filename
-	if err:= db.Create(&Image{}); err !=nil {
-		return nil,errors.New("failed to store the image")
+	db.AutoMigrate(&Image{})
+	if err:= db.Create(&image).Error; err !=nil {
+		return nil,errors.New("failed to store the image:"+err.Error())
 	}
 	return &image,nil
 }
 
 func UpdateProfilePhoto(image *Image,id uuid.UUID)error{
 	var user User
-	user.ImageID=image.ID
-	if err := db.First(&user, "id = ?", id).Updates(&user); err != nil {
-		return errors.New("failed to update profile")
+	//user.ImageID=image.ID
+	if err := db.First(&user, "id = ?", id).Updates(&user).Error; err != nil {
+		return errors.New("failed to update profile"+err.Error())
 	}
 	return nil
 }

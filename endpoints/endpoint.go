@@ -2,13 +2,13 @@ package endpoints
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/routes/dependants"
-	"main.go/routes/insurance"
-	"main.go/routes/notifications"
-	"main.go/routes/payment_methods"
-	"main.go/routes/payments"
-	"main.go/routes/users"
-	"main.go/routes/images"
+	"github.com/DANCANKARANI/QVP/routes/dependants"
+	"github.com/DANCANKARANI/QVP/routes/insurance"
+	"github.com/DANCANKARANI/QVP/routes/notifications"
+	"github.com/DANCANKARANI/QVP/routes/payment_methods"
+	"github.com/DANCANKARANI/QVP/routes/payments"
+	"github.com/DANCANKARANI/QVP/routes/users"
+	"github.com/DANCANKARANI/QVP/routes/images"
 )
 
 func CreateEndpoint(){

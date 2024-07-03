@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-    ID               uuid.UUID      `gorm:"type:varchar(36);primary_key"`
+    ID          uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
     FullName         string         `json:"full_name" gorm:"size:255"`
     Email            string         `json:"email" gorm:"size:255; unique"`
     PhoneNumber      string         `json:"phone_number" gorm:"size:255;unique"`
@@ -19,7 +19,7 @@ type User struct {
     CreatedAt        time.Time      `json:"created_at" gorm:"autoCreateTime"`
     DeletedAt        time.Time      `json:"deleted_at" gorm:"autoCreateTime"`
     UpdatedAt        time.Time      `json:"updated_at" gorm:"autoCreateTime"`
-    ImageID          uuid.UUID      `json:"image_id" gorm:"type:uuid"`
+    ImageID          uuid.UUID      `json:"image_id" gorm:"type:varchar(36)"`
     Image            Image          `gorm:"foreignKey:ImageID;references:ID;constraint:onUpdate:CASCADE,onDelete:SET NULL;"`
     Dependants       []Dependant    `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
     Payment          []Payment      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
@@ -129,7 +129,7 @@ type Branch struct {
 }
 
 type Image struct {
-    ID           uuid.UUID `json:"id" gorm:"type:uuid;primary_key;default:uuid_generate_v4()"`
+    ID          uuid.UUID `json:"id" gorm:"type:varchar(36);primary_key"`
     OriginalName string    `json:"original_name" gorm:"type:varchar(255)"`
     Path         string    `json:"path" gorm:"type:varchar(255)"`
     Thumbnail    string    `json:"thumbnail" gorm:"type:varchar(255)"`
@@ -138,8 +138,6 @@ type Image struct {
 }
 
 type Admin struct {
-    ID       uuid.UUID `json:"id" gorm:"type:uuid;primary_key;default:uuid_generate_v4()"`
-    Name     string    `json:"name" gorm:"type:varchar(255)"`
-    ImageID  uuid.UUID `json:"image_id" gorm:"type:uuid"`
-    Image    Image     `gorm:"foreignKey:ImageID;references:ID;constraint:onUpdate:CASCADE,onDelete:SET NULL;"`
+    Name string `json:"name" gorm:""`
+    Age int `json:"age"`
 }

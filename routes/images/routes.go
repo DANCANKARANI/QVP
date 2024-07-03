@@ -1,8 +1,8 @@
 package images
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/controllers/user"
-	"main.go/controllers/image"
+	"github.com/DANCANKARANI/QVP/controllers/user"
+	"github.com/DANCANKARANI/QVP/controllers/image"
 )
 
 func SetImageRoutes(app *fiber.App) {

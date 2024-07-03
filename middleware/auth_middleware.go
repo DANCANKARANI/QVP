@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
-	"main.go/database"
+	"github.com/DANCANKARANI/QVP/database"
 )
 
 type Claims struct {

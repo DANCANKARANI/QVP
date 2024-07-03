@@ -1,12 +1,15 @@
 package main
 
 import(
-	"main.go/endpoints"
-	"main.go/model"
+	"github.com/DANCANKARANI/QVP/endpoints"
+	//"github.com/DANCANKARANI/QVP/model"
+	"github.com/DANCANKARANI/QVP/pkg"
 )
 
 func main() {
+	//model.Migration()
+	pkg.Find()
 	endpoints.CreateEndpoint()
-	model.Migration()
+
 	//pkg.Start()
 }

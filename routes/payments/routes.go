@@ -2,8 +2,8 @@ package payments
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/controllers/payment"
-	"main.go/controllers/user"
+	"github.com/DANCANKARANI/QVP/controllers/payment"
+	"github.com/DANCANKARANI/QVP/controllers/user"
 )
 
 func SetPaymentRoutes(app *fiber.App) {

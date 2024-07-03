@@ -4,9 +4,9 @@ import (
 	//"time"
 
 	"github.com/gofiber/fiber/v2"
-	"main.go/model"
-	"main.go/password"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/model"
+	"github.com/DANCANKARANI/QVP/password"
+	"github.com/DANCANKARANI/QVP/utilities"
 )
 
 func ResetPassword(c *fiber.Ctx)error{

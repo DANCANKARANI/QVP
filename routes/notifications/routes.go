@@ -2,8 +2,8 @@ package notifications
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/controllers/notification"
-	"main.go/controllers/user"
+	"github.com/DANCANKARANI/QVP/controllers/notification"
+	"github.com/DANCANKARANI/QVP/controllers/user"
 )
 
 func SetNotificationRoute(app *fiber.App){

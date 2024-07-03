@@ -2,8 +2,8 @@ package dependants
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/controllers/dependant"
-	"main.go/controllers/user"
+	"github.com/DANCANKARANI/QVP/controllers/dependant"
+	"github.com/DANCANKARANI/QVP/controllers/user"
 )
 
 func SetDependantRoutes(app *fiber.App){

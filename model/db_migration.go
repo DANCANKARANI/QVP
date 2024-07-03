@@ -1,13 +1,12 @@
 package model
 
-import (
-	"main.go/database"
-)
+import "fmt"
 
 //migrates the models
 func Migration() {
-	db := database.ConnectDB()
+	fmt.Println("me 1")
 	db.AutoMigrate(
+		&Image{},
 		&User{}, 
 		&Dependant{},
 	 	&Insurance{},

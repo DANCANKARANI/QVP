@@ -2,8 +2,8 @@ package insurance
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/model"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/model"
+	"github.com/DANCANKARANI/QVP/utilities"
 )
 //add insurance handler
 func AddInsuranceHandler(c *fiber.Ctx)error{

@@ -3,9 +3,9 @@ package dependant
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"main.go/database"
-	"main.go/model"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/database"
+	"github.com/DANCANKARANI/QVP/model"
+	"github.com/DANCANKARANI/QVP/utilities"
 )
 var db = database.ConnectDB()
 var country_code = "KE"

@@ -2,8 +2,8 @@ package notification
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/model"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/model"
+	"github.com/DANCANKARANI/QVP/utilities"
 )
 
 func AddNotification(c *fiber.Ctx) error{

@@ -1,11 +1,11 @@
 package pkg
 
 import (
-	"errors"
 	"fmt"
 
-	"main.go/database"
-	"main.go/model"
+	//"github.com/DANCANKARANI/QVP/controllers/image"
+	"github.com/DANCANKARANI/QVP/database"
+	"github.com/DANCANKARANI/QVP/model"
 )
 
 type Shape interface {
@@ -75,36 +75,35 @@ func SendSms(){
 
 
 var db = database.ConnectDB()
-var notification  []model.Notification
 type Notification interface{
 	Notify(id string)(*[]model.Notification,error)
 }
 
 type NormalUser struct {}
-func (u NormalUser)Notify(id string)(*[]model.Notification,error){
-	exist := db.Find(&notification).Where("user_id = ?", "id").Scan(&notification).RecordNotFound()
-	if ! exist{
-		fmt.Println("failed", "Record not found")
-		return nil,errors.New("record not found")
-	}
-	fmt.Println(notification)
-	return &notification,nil
-}
 
-func sendNotification(N Notification,id string)(*[]model.Notification,error){
-	return N.Notify(id)
-}
-func Send(){
-	id := "533efd1a-5470-4579-87c8-f48c284e03b3"
-	user:=NormalUser{}
-	sendNotification(&user,id)	
-}
+
+
+
 func Start(){
 	// rectangle:=RectangleShape{Width:20,Length:50}
 	// triangle := TriangleShape{Base: 10,Height:20}
 	// SendShape(triangle,"start")
 	// SendShape(rectangle,"finish")
 	//inApp := InApp{ID:"1"}
-	Send()
+
 }
 
+
+func Run(){
+	db:=database.ConnectDB()
+	db.AutoMigrate(&model.Admin{},&model.User{})
+}
+func Find(){
+	
+	user:=model.User{}
+	err := db.Where("phone_number = ?", "0797409042").First(&user).Error
+	if err != nil {
+    fmt.Println(err.Error())
+	}
+	fmt.Println(user)
+}

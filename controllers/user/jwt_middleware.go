@@ -3,8 +3,8 @@ package user
 import (
 	"errors"
 	"github.com/gofiber/fiber/v2"
-	"main.go/middleware"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/middleware"
+	"github.com/DANCANKARANI/QVP/utilities"
 )
 
 func JWTMiddleware(c *fiber.Ctx) error {

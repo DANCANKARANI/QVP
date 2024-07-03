@@ -2,8 +2,8 @@ package payment
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/model"
-	"main.go/utilities"
+	"github.com/DANCANKARANI/QVP/model"
+	"github.com/DANCANKARANI/QVP/utilities"
 )
 //adding payment handler
 func AddPaymentHandler(c *fiber.Ctx)error{

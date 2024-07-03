@@ -1,8 +1,8 @@
 package image
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/utilities"
-	"main.go/model"
+	"github.com/DANCANKARANI/QVP/utilities"
+	"github.com/DANCANKARANI/QVP/model"
 )
 func UploadImages(c *fiber.Ctx)error{
 	id,_:=model.GetAuthUserID(c)

@@ -2,8 +2,8 @@ package insurance
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"main.go/controllers/insurance"
-	"main.go/controllers/user"
+	"github.com/DANCANKARANI/QVP/controllers/insurance"
+	"github.com/DANCANKARANI/QVP/controllers/user"
 )
 
 func SetInsuranceRoutes(app *fiber.App) {
