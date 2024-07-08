@@ -1,8 +1,11 @@
 package user
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+
 	//"github.com/jinzhu/gorm"
 	"github.com/DANCANKARANI/QVP/database"
 	"github.com/DANCANKARANI/QVP/model"
@@ -27,12 +30,15 @@ func CreateUserAccount(c *fiber.Ctx) error {
 		return utilities.ShowError(c,"inavalid email address", fiber.StatusNotAcceptable)
 	}
 	//Check if user exist
-	userExist,_,_ := model.UserExist(c,user.PhoneNumber)
+	userExist,_,err:= model.UserExist(c,user.PhoneNumber)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
 	if userExist{
-		return utilities.ShowError(c,"User with this phone number already exists",fiber.StatusConflict)
+		return utilities.ShowError(c,"User with this phone number already exists"+user.PhoneNumber,fiber.StatusConflict)
 	}
 	//validate phone number
-	_,err := utilities.ValidatePhoneNumber(user.PhoneNumber,country_code)
+	_,err = utilities.ValidatePhoneNumber(user.PhoneNumber,country_code)
 	if err !=nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusAccepted)
 	}
@@ -47,9 +53,10 @@ func CreateUserAccount(c *fiber.Ctx) error {
 
 	userModel := model.User{ID: id,FullName: user.FullName,Email: user.Email,PhoneNumber: user.PhoneNumber,CountryCode: country_code,Password: hashed_password,ResetCode: "",}
 	//create user
+	userModel.CodeExpirationTime=time.Now()
 	result := db.Create(&userModel)
 	if result.Error != nil {
-		return utilities.ShowError(c, "failed to add data to the database",fiber.StatusInternalServerError)
+		return utilities.ShowError(c, "failed to add data to the database"+result.Error.Error(),fiber.StatusInternalServerError)
 	}
 	return utilities.ShowMessage(c,"account created successfully",fiber.StatusOK)
 }

@@ -25,14 +25,13 @@ func Login(c *fiber.Ctx)error{
 	}
 
 	//check of user exist
-	userExist,existingUser,err:= model.UserExist(c,user.PhoneNumber)
-	fmt.Println(user.PhoneNumber+"1",existingUser.PhoneNumber+"2")
+	userExist,existingUser,_:= model.UserExist(c,user.PhoneNumber)
 	if ! userExist {
-		return utilities.ShowError(c,err.Error(),fiber.StatusNotFound)
+		return utilities.ShowError(c,"user does not exist",fiber.StatusNotFound)
 	}
 	
 	//compare password
-	err =utilities.CompareHashAndPassowrd(existingUser.Password,user.Password)
+	err :=utilities.CompareHashAndPassowrd(existingUser.Password,user.Password)
 	if err !=nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusForbidden)
 			 

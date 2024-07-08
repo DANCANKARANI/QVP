@@ -5,28 +5,34 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"github.com/DANCANKARANI/QVP/database"
 	"github.com/DANCANKARANI/QVP/utilities"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 var db =database.ConnectDB()
 /*
 finds user using phone number only
 @params phone_number
 */
-func UserExist(c *fiber.Ctx,phone_number string)(bool,User,error){
-	db.AutoMigrate(User{})
-	 existingUser := User{}
-	err := db.Find(&User{}, "phone_number = ?",phone_number).Scan(&existingUser).Error
-	if err != nil {
-		//user not found
-		fmt.Println(phone_number)
-		return false,existingUser,errors.New("user not found:"+err.Error())
+func UserExist(c *fiber.Ctx, phoneNumber string) (bool, *User, error) {
+	var existingUser User
+
+	// Query the database to find the user by phone number
+	result := db.Where("phone_number = ?", phoneNumber).First(&existingUser)
+	if result.Error != nil {
+		// If the error is a record not found error, return false and no error
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return false,nil, nil
+		}
+		fmt.Printf("Error finding user with phone number %s: %v\n", phoneNumber, result.Error)
+		return false, nil, fmt.Errorf("database error: %v", result.Error)
 	}
-	
-	return true,existingUser, nil
+
+	return true, &existingUser, nil
 }
+
 /*
 updates the reset password code in the database
 @params phone_number

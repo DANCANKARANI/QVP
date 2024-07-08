@@ -2,14 +2,11 @@ package main
 
 import(
 	"github.com/DANCANKARANI/QVP/endpoints"
-	//"github.com/DANCANKARANI/QVP/model"
-	"github.com/DANCANKARANI/QVP/pkg"
+	"github.com/DANCANKARANI/QVP/model"
+	//"github.com/DANCANKARANI/QVP/database"
 )
-
 func main() {
-	//model.Migration()
-	pkg.Find()
+	model.Migration()
+	//database.StartRedisServer()
 	endpoints.CreateEndpoint()
-
-	//pkg.Start()
 }

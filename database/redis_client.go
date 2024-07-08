@@ -1,32 +1,31 @@
 package database
 
 import (
+	"context"
 	"fmt"
-	"os"
-	"os/exec"
-	"time"
+	"log"
 
 	"github.com/go-redis/redis/v8"
 )
 
 //connecting to RedisClient
 func RedisClient()*redis.Client{
-	rdb :=redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
-	return rdb
-}
-func StartRedisServer() error {
-    cmd := exec.Command("redis-server") // Assumes redis-server is in your PATH
-    cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
+    redisHost := "brewdctf7h5b6avp6dnm-redis.services.clever-cloud.com"
+    redisPort := "3630"
+    redisPassword := "6VIqwXR5je4NdGqCMJq"
 
-    err := cmd.Start()
+    // Construct the Redis client options
+    rdb := redis.NewClient(&redis.Options{
+        Addr:     fmt.Sprintf("%s:%s", redisHost, redisPort),
+        Password: redisPassword,
+        DB:       0, // use default DB
+    })
+
+    // Test the connection
+    ctx := context.Background()
+    _, err := rdb.Ping(ctx).Result()
     if err != nil {
-        return fmt.Errorf("failed to start Redis server: %v", err)
+        log.Fatalf("Failed to connect to Redis: %v", err)
     }
-
-    // Give the server some time to start
-    time.Sleep(2 * time.Second)
-    return nil
+	return rdb
 }

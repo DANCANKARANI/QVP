@@ -14,12 +14,12 @@ type User struct {
     Password         string         `json:"password" gorm:"size:255"`
     ConfirmPassword  string         `json:"confirm_password" gorm:"size:255"`
     ResetCode        string         `json:"reset_code"`
-    CodeExpirationTime time.Time    `json:"code_expiration_time"`
+    CodeExpirationTime time.Time    `json:"code_expiration_time" gorm:"autoCreateTime"`
     ProfilePhotoPath string         `json:"profile_photo_path" gorm:"size:1024"`
     CreatedAt        time.Time      `json:"created_at" gorm:"autoCreateTime"`
     DeletedAt        time.Time      `json:"deleted_at" gorm:"autoCreateTime"`
     UpdatedAt        time.Time      `json:"updated_at" gorm:"autoCreateTime"`
-    ImageID          uuid.UUID      `json:"image_id" gorm:"type:varchar(36)"`
+    ImageID          uuid.UUID      `json:"image_id" gorm:"type:varchar(36);default:NULL"`
     Image            Image          `gorm:"foreignKey:ImageID;references:ID;constraint:onUpdate:CASCADE,onDelete:SET NULL;"`
     Dependants       []Dependant    `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
     Payment          []Payment      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
@@ -36,7 +36,7 @@ type Dependant struct {
     UploadedDate time.Time `json:"uploaded_date"`
     Comments  string      `json:"comments" gorm:"type:text"`
     InsuranceID uuid.UUID `json:"insurance_id" gorm:"type:varchar(36)"`
-    UserID      uuid.UUID `json:"user_id" gorm:"type:varchar(36)"`
+    UserID      uuid.UUID `json:"user_id" gorm:"type:varchar(36);default:NULL"`
     User        User      `json:"user"`
     Insurance  Insurance `json:"insurance"`
 }
@@ -64,7 +64,7 @@ type Payment struct{
     UpdatedAt time.Time         `json:"updated_at" gorm:"autoCreateTime"`
     ReceivedBy uuid.UUID        `json:"received_by"`
     UserID  uuid.UUID           `json:"user_id" gorm:"type:varchar(36)"`
-    PaymentMethodID uuid.UUID   `json:"payment_method_id" gorm:"type:varchar(36)"`
+    PaymentMethodID uuid.UUID   `json:"payment_method_id" gorm:"type:varchar(36);default:NULL"`
     User User                   `json:"user"`
     PaymentMethod PaymentMethod `json:"payment_method"`
 }
@@ -90,8 +90,6 @@ type Notification struct {
     ReceivedBy uuid.UUID        `json:"received_by"`
 }
 
-
-
 type Prescription struct {
     ID               uuid.UUID      `json:"id" gorm:"type:varchar(36);primary_key"`
     QuoteNumber      string         `json:"quote_number" gorm:"size:255"`
@@ -114,7 +112,6 @@ type Prescription struct {
     DeliveredBy      uuid.UUID      `json:"delivered_by" gorm:""`
     UserID           uuid.UUID      `gorm:"not null"`
     BranchID         uuid.UUID      `gorm:"not null"`
-
     // Relationships
     User            User            `gorm:"foreignKey:UserID"`
     Branch          Branch          `gorm:"foreignKey:BranchID"`
@@ -129,7 +126,7 @@ type Branch struct {
 }
 
 type Image struct {
-    ID          uuid.UUID `json:"id" gorm:"type:varchar(36);primary_key"`
+    ID          uuid.UUID  `json:"id" gorm:"type:varchar(36);primary_key"`
     OriginalName string    `json:"original_name" gorm:"type:varchar(255)"`
     Path         string    `json:"path" gorm:"type:varchar(255)"`
     Thumbnail    string    `json:"thumbnail" gorm:"type:varchar(255)"`
@@ -139,5 +136,5 @@ type Image struct {
 
 type Admin struct {
     Name string `json:"name" gorm:""`
-    Age int `json:"age"`
+    Age int     `json:"age"`
 }
