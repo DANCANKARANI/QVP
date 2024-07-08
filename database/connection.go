@@ -1,13 +1,15 @@
 package database
 
 import (
-    "fmt"
-    "log"
-    //"os"
+	"fmt"
+	"log"
+	"os"
 
-    "gorm.io/driver/mysql"
-    "gorm.io/gorm"
-    "github.com/joho/godotenv"
+	//"os"
+
+	"github.com/joho/godotenv"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 // ConnectDB connects to the MySQL database and returns the GORM DB object.
@@ -20,11 +22,11 @@ func ConnectDB() *gorm.DB {
     }
 
     // Retrieve environment variables
-    dbUser := "u3e6lqcmk6bomlmv"
-    password := "fL3O93uiXU35Olm7ybP"
-    dbName := "booi0hsjshh69jxkimhr"
-    host := "booi0hsjshh69jxkimhr-mysql.services.clever-cloud.com"
-    port := "21345"
+    dbUser := os.Getenv("DB_USER")
+    password := os.Getenv("DB_PASSWORD")
+    dbName := os.Getenv("DB_NAME")
+    host := os.Getenv("DB_HOST")
+    port := os.Getenv("DB_PORT")
     log.Println(password,dbUser,dbName,host,port)
     // Check if any of the environment variables are empty
     if dbUser == ""|| dbName == ""||password=="" || host == "" || port == "" {
