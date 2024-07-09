@@ -1,14 +1,15 @@
 package endpoints
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/DANCANKARANI/QVP/routes/prescriptions"
 	"github.com/DANCANKARANI/QVP/routes/dependants"
+	"github.com/DANCANKARANI/QVP/routes/images"
 	"github.com/DANCANKARANI/QVP/routes/insurance"
 	"github.com/DANCANKARANI/QVP/routes/notifications"
 	"github.com/DANCANKARANI/QVP/routes/payment_methods"
 	"github.com/DANCANKARANI/QVP/routes/payments"
 	"github.com/DANCANKARANI/QVP/routes/users"
-	"github.com/DANCANKARANI/QVP/routes/images"
+	"github.com/gofiber/fiber/v2"
 )
 
 func CreateEndpoint(){
@@ -20,5 +21,6 @@ func CreateEndpoint(){
 	insurance.SetInsuranceRoutes(app)
 	notifications.SetNotificationRoute(app)
 	images.SetImageRoutes(app)
+	prescriptions.SetPrescriptionRoutes(app)
 	app.Listen(":3000")
 }

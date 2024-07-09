@@ -74,3 +74,12 @@ func GetAllInsurances(c *fiber.Ctx)(*[]Insurance,error){
 	
 	return &response,nil
 }
+
+func DeleteInsurance(c *fiber.Ctx,id string)error{
+	insurance := Insurance{}
+	err := db.First(&Insurance{},"id = ?",id).Delete(&insurance)
+	if err != nil{
+		return errors.New("error deleting insurance")
+	}
+	return nil
+}

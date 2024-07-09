@@ -13,5 +13,8 @@ func Migration() {
 		&PaymentMethod{},
 		&Payment{},
 		&Notification{},
+		&Prescription{},
+		&Admin{},
+		&Rider{},
 	)
 }

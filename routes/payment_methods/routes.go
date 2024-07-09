@@ -9,7 +9,7 @@ import (
 func SetPaymentMethodRoutes(app *fiber.App){
 	auth := app.Group("/api/v1/payment-methods")
 	paymentMethodGroup := auth.Group("/",user.JWTMiddleware)
-	paymentMethodGroup.Get("/",payment.GetPaymentMethodPaymentsHandler)
+	paymentMethodGroup.Get("/",payment.GetPaymentMethods)
 	paymentMethodGroup.Post("/",payment.AddPaymentMethod)
 	paymentMethodGroup.Patch("/:id",payment.UpdatePaymentMethod)
 	paymentMethodGroup.Delete("/:id",payment.RemovePaymentMethod)

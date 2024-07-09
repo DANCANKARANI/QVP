@@ -14,4 +14,5 @@ func SetInsuranceRoutes(app *fiber.App) {
 	insuranceGroup.Get("/:id",insurance.GetOneInsuranceHandler)
 	insuranceGroup.Post("/",insurance.AddInsuranceHandler )
 	insuranceGroup.Put("/:id",insurance.UpdateInsuranceHandler)
+	insuranceGroup.Delete("/:id",insurance.DeleteInsuranceHandler)
 }

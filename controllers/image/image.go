@@ -19,3 +19,12 @@ func UploadImages(c *fiber.Ctx)error{
 	}
 	return utilities.ShowSuccess(c,"successfuly uploaded image",fiber.StatusOK,image)
 }
+
+func DeleteImageHandler(c *fiber.Ctx)error{
+	id,_:= model.GetAuthUserID(c)
+	err :=model.DeleteProfilePhoto(id)
+	if err != nil {
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	return utilities.ShowMessage(c,"successfully removed the profile image",fiber.StatusOK)
+}

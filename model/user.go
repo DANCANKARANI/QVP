@@ -15,6 +15,7 @@ type ResponseUser struct{
 	FullName string 	`json:"full_name"`
 	PhoneNumber string 	`json:"phone_number"`
 	Email string 		`json:"email"`
+	ImageID uuid.UUID 	`json:"image_id"`
 }
 
 func GetOneUSer(c *fiber.Ctx)(*ResponseUser,error){

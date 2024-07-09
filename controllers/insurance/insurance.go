@@ -40,3 +40,12 @@ func GetAllInsuranceHandler(c *fiber.Ctx)error{
 	}
 	return utilities.ShowSuccess(c,"insurances retrieved successfully",fiber.StatusOK,insurances)
 }
+
+func DeleteInsuranceHandler(c *fiber.Ctx)error{
+	id := c.Params("id")
+	err := model.DeleteInsurance(c,id)
+	if err != nil {
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	return utilities.ShowMessage(c,"insurance deleted successfully",fiber.StatusOK)
+}
