@@ -8,7 +8,7 @@ import (
 func SetImageRoutes(app *fiber.App) {
 	auth := app.Group("/api/v1/uploads")
 	uploadGroup := auth.Group("/",user.JWTMiddleware)
-	uploadGroup.Post("/",image.UploadImages)
-	uploadGroup.Put("/:id",image.UploadImages)
+	uploadGroup.Post("/",image.UploadImagesHandler)
+	uploadGroup.Put("/:id",image.UploadImagesHandler)
 	uploadGroup.Delete("/:id",image.DeleteImageHandler)
 }

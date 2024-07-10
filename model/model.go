@@ -8,27 +8,37 @@ import (
 )
 
 type User struct {
-    ID          uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
-    FullName         string         `json:"full_name" gorm:"size:255"`
-    Email            string         `json:"email" gorm:"size:255; unique"`
-    PhoneNumber      string         `json:"phone_number" gorm:"size:255;unique"`
-    CountryCode      string         `json:"country_code" gorm:"size:10"`
-    Password         string         `json:"password" gorm:"size:255"`
-    ConfirmPassword  string         `json:"confirm_password" gorm:"size:255"`
-    ResetCode        string         `json:"reset_code"`
-    CodeExpirationTime time.Time    `json:"code_expiration_time" gorm:"autoCreateTime"`
-    ProfilePhotoPath string         `json:"profile_photo_path" gorm:"size:1024"`
-    CreatedAt        time.Time      `json:"created_at" gorm:"autoCreateTime"`
-    DeletedAt        time.Time      `json:"deleted_at" gorm:"autoCreateTime"`
-    UpdatedAt        time.Time      `json:"updated_at" gorm:"autoCreateTime"`
-    ImageID          uuid.UUID      `json:"image_id" gorm:"type:varchar(36);default:NULL"`
-    Image            Image          `gorm:"foreignKey:ImageID;references:ID;constraint:onUpdate:CASCADE,onDelete:SET NULL;"`
-    Dependants       []Dependant    `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
-    Payment          []Payment      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
-    Notification     []Notification `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
-    Prescriptions    []Prescription `gorm:"foreignKey:UserValidatedBy;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
+    ID                uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
+    FullName          string              `json:"full_name" gorm:"size:255"`
+    Email             string              `json:"email" gorm:"size:255;unique"`
+    PhoneNumber       string              `json:"phone_number" gorm:"size:255;unique"`
+    CountryCode       string              `json:"country_code" gorm:"size:10"`
+    Password          string              `json:"password" gorm:"size:255"`
+    ConfirmPassword   string              `json:"confirm_password" gorm:"size:255"`
+    ResetCode         string              `json:"reset_code"`
+    CodeExpirationTime time.Time          `json:"code_expiration_time" gorm:"autoCreateTime"`
+    CreatedAt         time.Time           `json:"created_at" gorm:"autoCreateTime"`
+    DeletedAt         gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
+    UpdatedAt         time.Time           `json:"updated_at" gorm:"autoCreateTime"`
+    ImageID           uuid.UUID           `json:"image_id" gorm:"type:varchar(36);default:NULL"`
+    Image             Image               `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+    Dependants        []Dependant         `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
+    Payment           []Payment           `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
+    Notification      []Notification      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
+    Prescriptions     []Prescription      `gorm:"foreignKey:UserValidatedBy;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
 }
 
+type Image struct {
+    ID           uuid.UUID  `json:"id" gorm:"type:varchar(36);primary_key"`
+    OriginalName string     `json:"original_name" gorm:"type:varchar(255)"`
+    Path         string     `json:"path" gorm:"type:varchar(255)"`
+    Thumbnail    string     `json:"thumbnail" gorm:"type:varchar(255)"`
+    Type         string     `json:"type" gorm:"type:varchar(255)"`
+    CreatedAt    time.Time  `json:"created_at" gorm:"autoCreateTime"`
+    DeletedAt  gorm.DeletedAt `json:"deleted_at" gorm:"index"`
+    UserID       uuid.UUID  `json:"user_id" gorm:"type:varchar(36)"`
+    
+}
 type Dependant struct {
     ID          uuid.UUID `json:"id" gorm:"type:varchar(36);primary_key"`
     FullName    string    `json:"full_name" gorm:"size:255"`
@@ -79,7 +89,7 @@ type PaymentMethod struct {
     DeletedAt time.Time         `json:"deleted_at" gorm:"autoCreateTime"`
     UpdatedAt time.Time         `json:"updated_at" gorm:"autoCreateTime"`
     ReceivedBy uuid.UUID        `json:"received_by" gorm:"type:varchar(255)"` 
-    Payments []Payment          `gorm:"foreignKey:PaymentMethodID;constraint:OnUpdate:CASCADE;OnDelete:SET NULL;reference:ID"`
+    Payments []Payment          `gorm:"foreignKey:PaymentMethodID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;reference:ID"`
 }
 type Notification struct {
     ID        uuid.UUID         `json:"id" gorm:"type:varchar(36);primary_key"`
@@ -104,7 +114,7 @@ type Prescription struct {
     DeletedAt        gorm.DeletedAt `json:"deleted_at" gorm:"index"`
     DeliveryDetails  string         `json:"delivery_details" gorm:"type:text"`
     UserValidatedAt  *time.Time     `json:"user_validated_at"`
-    UserValidatedBy  uuid.UUID      `json:"user_validated_by" gorm:"type:varchar(36); default:NULL"`
+    UserValidatedBy  uuid.UUID      `json:"user_validated_by" gorm:"type:varchar(36);default:NULL"`
     UserApprovedAt   *time.Time     `json:"user_approved_at"`
     UserApprovedBy   uuid.UUID      `json:"user_approved_by" gorm:"type:varchar(36);default:NULL"`
     AdminValidateAt  *time.Time     `json:"admin_validate_at"`
@@ -126,18 +136,10 @@ type Branch struct {
     Description string              `json:"description" gorm:"type:text"`
     CreatedAt   time.Time           `json:"created_at" gorm:"type:time; autoCreateTime"`
     UpdatedAt   time.Time           `json:"updated_at" gorm:"type:time; autoCreateTime"`
-
     Prescriptions []Prescription    `gorm:"foreignKey:BranchID;constraint:OnUpdate:CASCADE;OnDelete:SET NULL;reference:ID"`
 }
 
-type Image struct {
-    ID          uuid.UUID  `json:"id" gorm:"type:varchar(36);primary_key"`
-    OriginalName string    `json:"original_name" gorm:"type:varchar(255)"`
-    Path         string    `json:"path" gorm:"type:varchar(255)"`
-    Thumbnail    string    `json:"thumbnail" gorm:"type:varchar(255)"`
-    Type         string    `json:"type" gorm:"type:varchar(255)"`
-    CreatedAt    time.Time `json:"created_at" gorm:"autoCreateTime"`
-}
+
 
 type Admin struct {
     ID              uuid.UUID       `json:"id" gorm:"type:varchar(36);primary_key"`

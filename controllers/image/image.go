@@ -1,11 +1,16 @@
 package image
+
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/DANCANKARANI/QVP/model"
+	"github.com/DANCANKARANI/QVP/utilities"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
-func UploadImages(c *fiber.Ctx)error{
-	id,_:=model.GetAuthUserID(c)
+
+/*
+Adds and updates the image
+*/
+func UploadImagesHandler(c *fiber.Ctx)error{
 	file, err := c.FormFile("image")
 	if err != nil {
 		return utilities.ShowError(c,"failed to upload the image:", fiber.StatusInternalServerError)
@@ -14,14 +19,20 @@ func UploadImages(c *fiber.Ctx)error{
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.ErrInternalServerError.Code)
 	}
+	return utilities.ShowSuccess(c,"successfuly uploaded image",fiber.StatusOK,image)
+}
+/*func UpdateImageHandler(c *fiber.Ctx)error{
+	id,_:=uuid.Parse(c.Params("id"))
+	image := &model.Image{}
 	if err := model.UpdateProfilePhoto(image,id);err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
-	return utilities.ShowSuccess(c,"successfuly uploaded image",fiber.StatusOK,image)
-}
+	return nil
+}*/
 
+//delete the image
 func DeleteImageHandler(c *fiber.Ctx)error{
-	id,_:= model.GetAuthUserID(c)
+	id,_:= uuid.Parse(c.Params("id"))
 	err :=model.DeleteProfilePhoto(id)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)

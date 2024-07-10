@@ -2,8 +2,11 @@ package model
 
 import (
 	"errors"
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 //Vat value
@@ -19,7 +22,8 @@ func AddPrescription(c *fiber.Ctx,user_id, rider_id,admin_id uuid.UUID) (*Prescr
 	db.AutoMigrate(&Prescription{})
 	body := Prescription{}
 	if err:=c.BodyParser(&body);err != nil {
-		return nil, errors.New("failed to get data")
+		log.Fatal(err.Error())
+		return nil, errors.New("failed to add prescription")
 	}
 	prescription :=&Prescription{
 		SubTotal: body.SubTotal,
@@ -44,14 +48,20 @@ func AddPrescription(c *fiber.Ctx,user_id, rider_id,admin_id uuid.UUID) (*Prescr
 Gets users prescriptions
 @params id
 */
-func GetUsersPrescription(c *fiber.Ctx,id string)(*Prescription,error){
-	response := Prescription{}
-	err := db.Preload("User").Preload("Image").First(&response, "user_approved_by = ?", id).Scan(&response).Error
-	if err != nil {
-		return nil,errors.New("failed to get prescriptions")
-	}
-	return &response,nil
+func GetUsersPrescription(c *fiber.Ctx, id string) (*Prescription, error) {
+    response := Prescription{}
+    err := db.Preload("User").Preload("Image").First(&response, "user_approved_by = ?", id).Error
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            log.Printf("No prescription found for user with ID %s", id)
+            return nil, fiber.NewError(fiber.StatusNotFound, "No prescription found")
+        }
+        log.Printf("Error retrieving prescription for user with ID %s: %v", id, err)
+        return nil, errors.New("failed to get prescriptions")
+    }
+    return &response, nil
 }
+
 /*
 updates the prescription
 @params id
@@ -86,17 +96,35 @@ func UpdatePrescription(c *fiber.Ctx,id,user_id,rider_id,admin_id uuid.UUID)(*Pr
 
 /*
 Deletes the prescription
+@params id
 */
-func DeletePrescription(c *fiber.Ctx, id string) error {
-	prescription := Prescription{}
-	err :=db.First(&Prescription{}, "id = ?",id).Delete(&prescription).Error
-	if err != nil{
-		return errors.New("failed to delete prescription")
-	}
-	return nil
+func DeletePrescription(c *fiber.Ctx, id uuid.UUID) error {
+    prescription := Prescription{}
+    
+    // Check if the prescription exists
+    err := db.First(&prescription, "id = ?", id).Error
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            log.Printf("No prescription found with ID %s", id)
+            return fiber.NewError(fiber.StatusNotFound, "No prescription found")
+        }
+        log.Printf("Error finding prescription with ID %s: %v", id, err)
+        return errors.New("failed to find prescription")
+    }
+    
+    // Attempt to delete the prescription
+    err = db.Delete(&prescription).Error
+    if err != nil {
+        log.Printf("Error deleting prescription with ID %s: %v", id, err)
+        return fiber.NewError(fiber.StatusInternalServerError, "Failed to delete prescription")
+    }
+    return nil
 }
 
-
+/*
+VAT calculator method
+@params vatRate
+*/
 func (p *Prescription)CalculateVAT(vatRate float64){
 	p.VAT = p.SubTotal*vatRate/100
 	p.Total = p.SubTotal+p.VAT

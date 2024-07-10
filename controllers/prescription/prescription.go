@@ -42,7 +42,7 @@ func UpdatePrescriptionHandler(c *fiber.Ctx)error{
 }
 //Delete prescription handler
 func DeletePrescriptionHandler(c *fiber.Ctx)error{
-	id := c.Params("id")
+	id,_:= uuid.Parse(c.Params("id"))
 	err := model.DeletePrescription(c,id)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)

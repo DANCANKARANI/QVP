@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/DANCANKARANI/QVP/database"
@@ -16,23 +17,27 @@ var db =database.ConnectDB()
 finds user using phone number only
 @params phone_number
 */
+
 func UserExist(c *fiber.Ctx, phoneNumber string) (bool, *User, error) {
-	var existingUser User
+    var existingUser User
 
-	// Query the database to find the user by phone number
-	result := db.Where("phone_number = ?", phoneNumber).First(&existingUser)
-	if result.Error != nil {
-		// If the error is a record not found error, return false and no error
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return false,nil, nil
-		}
-		fmt.Printf("Error finding user with phone number %s: %v\n", phoneNumber, result.Error)
-		return false, nil, fmt.Errorf("database error: %v", result.Error)
-	}
+    // Detailed logging
+    log.Printf("Checking for user with phone number: %s", phoneNumber)
 
-	return true, &existingUser, nil
+    result := db.Where("phone_number = ?", phoneNumber).First(&existingUser)
+    if result.Error != nil {
+        // Log the detailed error
+        log.Printf("Error finding user with phone number %s: %v", phoneNumber, result.Error)
+
+        if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+            return false, nil, nil
+        }
+
+        return false, nil, fmt.Errorf("database error: %v", result.Error)
+    }
+	log.Printf("User found: %+v", existingUser)
+    return true, &existingUser, nil
 }
-
 /*
 updates the reset password code in the database
 @params phone_number

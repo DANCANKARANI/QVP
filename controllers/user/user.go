@@ -31,11 +31,3 @@ func UpdateUserHandler(c *fiber.Ctx)error{
 	}
 	return utilities.ShowSuccess(c,"user updated successfully",fiber.StatusOK,response)
 }
-
-func AddProfileImage(c *fiber.Ctx)error{
-	err :=model.AddProfileImage(c)
-	if err != nil {
-		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
-	}
-	return utilities.ShowMessage(c,"successfully added profile image",fiber.StatusOK)
-}
