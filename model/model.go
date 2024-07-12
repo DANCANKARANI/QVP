@@ -21,6 +21,7 @@ type User struct {
     UpdatedAt         time.Time           `json:"updated_at" gorm:"autoCreateTime"`
     ImageID           uuid.UUID           `json:"image_id" gorm:"type:varchar(36);default:NULL"`
     Image             Image               `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+    Insurance         Insurance           `gorm:"many2many:insurance_users"`
     Dependants        []Dependant         `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Payment           []Payment           `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Notification      []Notification      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
@@ -67,6 +68,7 @@ type Insurance struct {
     ImageID  uuid.UUID          `json:"image_id" gorm:"type:varchar(36);default:NULL"`
     Image    Image              `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
     ReceivedBy uuid.UUID        `json:"received_by"`
+    User        []User          `gorm:"many2many:insurance_users"`
     Dependants  []Dependant     `gorm:"foreignKey:InsuranceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
 }
 type Payment struct{
@@ -91,8 +93,8 @@ type PaymentMethod struct {
     CreatedAt time.Time         `json:"created_at" gorm:"autoCreateTime"`
     DeletedAt gorm.DeletedAt    `json:"deleted_at" gorm:"index"`
     UpdatedAt time.Time         `json:"updated_at" gorm:"autoUpdateTime"`
-    ImageID   uuid.UUID `json:"image_id" gorm:"type:varchar(36);default:NULL"`
-    Image     Image     `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+    ImageID   uuid.UUID         `json:"image_id" gorm:"type:varchar(36);default:NULL"`
+    Image     Image             `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
     ReceivedBy uuid.UUID        `json:"received_by" gorm:"type:varchar(255)"` 
     Payments []Payment          `gorm:"foreignKey:PaymentMethodID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;reference:ID"`
 }
@@ -175,4 +177,13 @@ type Rider struct {
     CurrentTeamId uuid.UUID `json:"current_team_id"`
     ProfilePhotoPath string `json:"profile_photo_path" gorm:"type:varchar(255)"`
     Prescriptions []Prescription `gorm:"foreignKey:DeliveredBy;constraint:OnUpdate:CASCADE;OnDelete:SET NULL;reference:ID"`
+}
+
+type InsuranceUser struct {
+    ID          uuid.UUID        `json:"id" gorm:"type:varchar(36);primary_key"`
+    UserID       uuid.UUID       `json:"user_id" gorm:"type:varchar(36);primary_key"`
+    InsuranceID  uuid.UUID       `json:"insurance_id" gorm:"type:varchar(36);primary_key"`
+    CreatedAt    time.Time       `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt    time.Time       `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt    gorm.DeletedAt  `json:"deleted_at" gorm:"index"`
 }

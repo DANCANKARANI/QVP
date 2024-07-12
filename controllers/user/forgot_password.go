@@ -22,7 +22,7 @@ func ForgotPassword(c *fiber.Ctx) error {
 	//checking if the user with the given email and phone number exists
 	found_user,err :=model.FindUser(user.Email,user.PhoneNumber)
 	if err != nil {
-		return utilities.ShowError(c, "user does not exist",fiber.StatusNotFound)
+		return utilities.ShowError(c, err.Error(),fiber.StatusNotFound)
 	}
 
 	//generate code and expiration time

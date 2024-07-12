@@ -65,14 +65,20 @@ finds if the user with the given email and phone number is registered
 @params email
 @params phone_number
 */
-func FindUser(email, phone_number string)(User,error){
+func FindUser(email, phoneNumber string) (User, error) {
 	user := User{}
-	result:=db.Where("phone_number = ? AND email = ?",phone_number,email).First(&user)
-	if result.Error != nil {
-		return user,result.Error
+	err_str := fmt.Sprintf("user with email %s and phone number %s does not exist", email, phoneNumber)
+	err := db.Where("phone_number = ? AND email = ?", phoneNumber, email).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			
+			return user, errors.New(err_str)
+		}
+		return user, errors.New(err_str)
 	}
-	return user,nil
+	return user, nil
 }
+
 
 /*
 finds dependants using phone number only
@@ -82,7 +88,7 @@ func GetAuthUserID(c *fiber.Ctx)(uuid.UUID,error){
 	user_id :=c.Locals("user_id")
 	id,ok := user_id.(*uuid.UUID)
 	if !ok{
-		return uuid.Nil,errors.New("failed converting user_id to uuid")
+		return uuid.Nil,errors.New("unauthorized")
 	}
 	user_id=*id
 	return user_id.(uuid.UUID),nil

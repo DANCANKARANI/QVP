@@ -1,10 +1,10 @@
 package model
 
-import "fmt"
+import "log"
 
 //migrates the models
 func Migration() {
-	fmt.Println("me 1")
+	log.Println("starting migrations...")
 	db.AutoMigrate(
 		&Image{},
 		&User{}, 
@@ -16,5 +16,6 @@ func Migration() {
 		&Prescription{},
 		&Admin{},
 		&Rider{},
+		&InsuranceUser{},
 	)
 }

@@ -2,6 +2,9 @@ package model
 
 import (
 	"errors"
+	"fmt"
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -56,3 +59,32 @@ func UpdateUser(c *fiber.Ctx)(*ResponseUser,error){
 	return &response,nil
 }
 
+
+func AddUserInsurance(user_id,insurance_id uuid.UUID)(*InsuranceUser,error){
+	id:=uuid.New()
+	insuranceUser:=InsuranceUser{
+		ID:id,
+		UserID: user_id,
+		InsuranceID:insurance_id,
+	}
+
+	err:=db.Create(&insuranceUser).Error
+	if err != nil {
+		log.Println(err.Error())
+		return nil, errors.New("failed to add insurance users")
+	}
+	return &insuranceUser,nil
+}
+func UpdateUserInsurance(id,user_id,insurance_id uuid.UUID) (*InsuranceUser,error){
+	insuranceUser := InsuranceUser{
+		UserID: user_id,
+		InsuranceID: insurance_id,
+	}
+	fmt.Println(insurance_id)
+	err:=db.First(&InsuranceUser{},"id = ?",id).Updates(&insuranceUser).Scan(&insuranceUser).Error
+	if err != nil {
+		log.Println(err.Error())
+		return nil,errors.New("failed to update insurance users")
+	}
+	return &insuranceUser,nil
+}
