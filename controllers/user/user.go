@@ -16,7 +16,7 @@ func GetOneUserHandler(c *fiber.Ctx) error {
 
 //get all users handler
 func GetAllUsersHandler(c *fiber.Ctx)error{
-	response,err := model.GetAllUsers(c)
+	response,err := model.GetAllUsersDetails(c)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError) 
 	}

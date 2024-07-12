@@ -30,7 +30,7 @@ func GetOneUSer(c *fiber.Ctx)(*ResponseUser,error){
 	return &user,nil
 }
 //gets all the users
-func GetAllUsers(c *fiber.Ctx)(*[]ResponseUser,error){
+func GetAllUsersDetails(c *fiber.Ctx)(*[]ResponseUser,error){
 	response:=[]ResponseUser{}
 	err := db.Model(&User{}).Scan(&response).Error
 	if err != nil {
