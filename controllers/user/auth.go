@@ -21,7 +21,7 @@ type loginResponse struct {
 func Login(c *fiber.Ctx)error{
 	user := model.User{}
 	if err := c.BodyParser(&user); err !=nil {
-		return c.JSON(fiber.Map{"error":err.Error()})
+		return utilities.ShowError(c,"failed to login",fiber.StatusInternalServerError)
 	}
 
 	//check of user exist

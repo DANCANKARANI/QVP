@@ -18,9 +18,9 @@ func RegisterDependantAccount(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"error":err.Error()})
 	}
 	//check if the dependant exists
-	dependantExist,_,_ := model.DependantExist(c,body.PhoneNumber)
+	dependantExist,_,err := model.DependantExist(c,body.MemberNumber)
 	if dependantExist{
-		return utilities.ShowError(c,"User with this phone number already exists",fiber.StatusConflict)
+		return utilities.ShowError(c,err.Error(),fiber.StatusConflict)
 	}
 	//validate phone number
 	if body.PhoneNumber != ""{
@@ -30,7 +30,7 @@ func RegisterDependantAccount(c *fiber.Ctx) error {
 		}
 	}
 	//adding the dependant
-	err := model.AddDependant(c)
+	err = model.AddDependant(c)
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
@@ -66,7 +66,7 @@ func GetDependantID(c *fiber.Ctx)error{
 }
 //delete the dependant
 func DeleteDependantHandler(c *fiber.Ctx)error{
-	dependant_id := c.Query("id")
+	dependant_id := c.Params("id")
 	id,_:=uuid.Parse(dependant_id)
 	err := model.DeleteDependant(c, id)
 	if err != nil {

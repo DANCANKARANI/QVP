@@ -1,6 +1,7 @@
 package user
 
 import (
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,7 +23,8 @@ func CreateUserAccount(c *fiber.Ctx) error {
 	id := uuid.New()
 	user:=model.User{}
 	if err :=c.BodyParser(&user); err != nil {
-		return utilities.ShowError(c,"failed to parse JSON data", fiber.StatusInternalServerError)
+		log.Fatal(err.Error())
+		return utilities.ShowError(c,"failed to create account", fiber.StatusInternalServerError)
 	}
 
 	//validate email address
@@ -40,6 +42,7 @@ func CreateUserAccount(c *fiber.Ctx) error {
 	//validate phone number
 	_,err = utilities.ValidatePhoneNumber(user.PhoneNumber,country_code)
 	if err !=nil{
+		log.Fatal(err.Error())
 		return utilities.ShowError(c,err.Error(),fiber.StatusAccepted)
 	}
 
@@ -54,9 +57,10 @@ func CreateUserAccount(c *fiber.Ctx) error {
 	userModel := model.User{ID: id,FullName: user.FullName,Email: user.Email,PhoneNumber: user.PhoneNumber,CountryCode: country_code,Password: hashed_password,ResetCode: "",}
 	//create user
 	userModel.CodeExpirationTime=time.Now()
-	result := db.Create(&userModel)
-	if result.Error != nil {
-		return utilities.ShowError(c, "failed to add data to the database"+result.Error.Error(),fiber.StatusInternalServerError)
+	err = db.Create(&userModel).Error
+	if err!= nil {
+		log.Fatal(err.Error())
+		return utilities.ShowError(c, "failed to add data to the database",fiber.StatusInternalServerError)
 	}
 	return utilities.ShowMessage(c,"account created successfully",fiber.StatusOK)
 }

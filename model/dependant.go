@@ -2,9 +2,14 @@ package model
 
 import (
 	"errors"
+	"fmt"
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
+
 /*
 finds if the dependant already exists using the phone number
 */
@@ -21,17 +26,36 @@ type ResponseDependant struct{
     User    ResponseUser
     Insurance ResInsurance			
 }
-
-func DependantExist(c *fiber.Ctx,phone_number string)(bool,Dependant,error){
-	existingDependant := Dependant{}
-   result := db.Where("phone_number = ?",phone_number).First(&existingDependant)
-   if result.Error != nil {
-	   //user not found
-	   return false,existingDependant,result.Error
-   }
-   return true,existingDependant, nil
+type ResponseUpdateDependant struct {
+	ID		uuid.UUID			`json:"id"`
+	FullName 	string			`json:"full_name"`
+	PhoneNumber string 			`json:"phone_number"`
+	Relationship string 		`json:"relationship"`
+	MemberNumber string 		`json:"member_number"`
+	Status 		string 			`json:"status"`
+	InsuranceID uuid.UUID		`json:"insurance_id"`
+	UserID	uuid.UUID			`json:"user_id"`
 }
 
+func DependantExist(c *fiber.Ctx, member_number string) (bool, *Dependant, error) {
+	existingDependant := Dependant{}
+	err := db.Where("member_number = ?", member_number).First(&existingDependant).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// Dependant not found
+			return false, nil,nil
+		}
+		// Other errors
+		log.Println("Error checking existence of dependant")
+		return false, nil, err
+	}
+	// Dependant found
+	err_string:="dependant with member number "+member_number+" exists"
+	return true, &existingDependant, errors.New(err_string)
+}
+
+//add deoendant
 func AddDependant(c *fiber.Ctx)error{
 	id := uuid.New()
 	body := Dependant{}
@@ -41,13 +65,15 @@ func AddDependant(c *fiber.Ctx)error{
 	//getting the user id using GetAuthUerID fuction
 	user_id,err := GetAuthUserID(c)
 	if err != nil{
-		return err
+		log.Println(err.Error())
+		return errors.New("failed to get user id")
 	}
 	body.ID=id
 	body.UserID=user_id
-	result := db.Create(&body)
-	if result.Error != nil{
-		return errors.New("failed to add dependant: "+result.Error.Error())
+	err = db.Create(&body).Error
+	if err != nil{
+		log.Println(err.Error())
+		return errors.New("failed to add dependant")
 	}
 	return nil
 }
@@ -59,7 +85,8 @@ func GetAllDependants(c *fiber.Ctx,user_id uuid.UUID)(*[]ResponseDependant,error
 	var dependants []Dependant
     if err := db.Preload("User").Preload("Insurance").
         Where("user_id = ?", user_id).Find(&dependants).Error; err != nil {
-        return nil,errors.New("failed to get data:"+err.Error())
+			log.Fatal(err.Error())
+        return nil,errors.New("failed to get data")
     }
 	var response []ResponseDependant
     for _, dependant := range dependants {
@@ -72,7 +99,7 @@ func GetAllDependants(c *fiber.Ctx,user_id uuid.UUID)(*[]ResponseDependant,error
 		resInsurance :=ResInsurance{
 			ID: dependant.Insurance.ID,
 			InsuranceName: dependant.Insurance.InsuranceName,
-			PhotoPath: dependant.Insurance.PhotoPath,
+			ImageID:dependant.Insurance.ImageID,
 			Description: dependant.Insurance.Description,
 		}
         responseDependant := ResponseDependant{
@@ -107,7 +134,6 @@ func GetDependantID(c *fiber.Ctx)(uuid.UUID,error){
 	if result.Error != nil{
 		return uuid.Nil,result.Error
 	}
-	
 	return dependant.ID,nil
  }
 
@@ -115,33 +141,71 @@ func GetDependantID(c *fiber.Ctx)(uuid.UUID,error){
  updates the dependants details
  @params dependant_id
  */
- func UpdateDependant(c *fiber.Ctx, dependant_id string)(*ResponseDependant,error){
+ func UpdateDependant(c *fiber.Ctx, dependant_id string)(*ResponseUpdateDependant,error){
 	body := Dependant{}
 	if err := c.BodyParser(&body); err != nil {
-		return &ResponseDependant{},errors.New("failed to parse json data")
+		log.Fatal(err.Error())
+		return nil,errors.New("failed to parse json data")
 	}
-	
-	result := db.Model(&Dependant{}).Where("id = ?", dependant_id).Updates(&body)
-	if result.Error != nil {
-		return nil,result.Error
+	//update dependant
+	err:= db.Model(&Dependant{}).Where("id = ?", dependant_id).Updates(&body).Error
+	if err != nil {
+		log.Fatal(err.Error())
+		return nil,errors.New("failed to update dependant")
 	}
-	response := ResponseDependant{}
-	db.First(&Dependant{}).Where("id = ?",dependant_id).Scan(&response)
-	return &response,nil
+	//query response data
+	response,err:=GetDependantResponse(dependant_id)
+	if err != nil{
+		log.Fatal(err.Error())
+		return nil,errors.New("failed to get response")
+	}
+	resDependant:=ResponseUpdateDependant{
+		ID:response.ID,
+		FullName: response.FullName,
+		Relationship: response.Relationship,
+		MemberNumber: response.MemberNumber,
+		Status: response.Status,
+		InsuranceID: response.InsuranceID,
+		UserID: response.UserID,
+	}
+	return &resDependant,nil
  }
+//get response to dependants
+ func GetDependantResponse(dependantID string) (*Dependant, error) {
+    response := Dependant{}
+    
+    // Query the database to fetch the dependant and preload associated data
+    err := db.Preload("User").Preload("Insurance").First(&response, "id = ?", dependantID).Error
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            log.Printf("Dependant with ID %s not found", dependantID)
+            return nil, errors.New("dependant not found")
+        }
+        log.Printf("Error fetching dependant with ID %s: %v", dependantID, err)
+        return nil, fmt.Errorf("database error")
+    }
+    return &response, nil
+}
 
  /*
  deletes the dependant
  @params dependant_id
  @params c *fiber.ctx
  */
-func DeleteDependant(c *fiber.Ctx,dependant_id uuid.UUID)error{
+ func DeleteDependant(c *fiber.Ctx, dependant_id uuid.UUID) error {
 	dependant := Dependant{}
-	result :=db.First(&dependant,"id = ?",dependant_id)
-	if result.Error != nil{
-		return errors.New("failed to delete the dependant: "+result.Error.Error())
+	err := db.First(&dependant, "id = ?", dependant_id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("dependant not found")
+		}
+		log.Println(err.Error())
+		return errors.New("failed to delete dependant")
 	}
-	db.Delete(&dependant)
+	if err := db.Delete(&dependant).Error; err != nil {
+		log.Println(err.Error())
+		return errors.New("failed to delete the dependant")
+	}
 	return nil
 }
 

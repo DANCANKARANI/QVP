@@ -2,15 +2,12 @@ package model
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"mime/multipart"
 	"regexp"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
-
 
 func SanitizeFileName(fileName string) string {
     // Define a regular expression to match invalid characters
@@ -27,7 +24,6 @@ func UploadImage(c *fiber.Ctx,file *multipart.FileHeader)(*Image,error){
 		Type: file.Header.Get("Content-Type"),
 		UserID: user_id,
 	}
-
 	savePath := SanitizeFileName(file.Filename)
 	if err := c.SaveFile(file,"./uploads"+savePath); err != nil{
 		return nil,errors.New("failed to save the file")
@@ -38,26 +34,59 @@ func UploadImage(c *fiber.Ctx,file *multipart.FileHeader)(*Image,error){
 	if err:= db.Create(&image).Error; err !=nil {
 		return nil,errors.New("failed to store the image: "+err.Error())
 	}
-	err:=UpdateUser1(user_id,id)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	
 	return &image,nil
 }
+
+
+
 /*
 updates user
 @params user_id
 @params image_id
 */
-func UpdateUser1(user_id,image_id uuid.UUID)(error){
+func UpdateUserProfile(user_id,image_id uuid.UUID)(error){
 	body:=User{}
 	body.ImageID=image_id
 	err := db.First(&User{},"id = ?",user_id).Updates(&body).Scan(&body).Error
 	if err != nil {
+		log.Println(err.Error())
 		return errors.New("error in updating the user:"+err.Error())
 	}
 	return nil
 }
+/*
+updates payment method icon
+@params payment_method_id
+@params image_id
+*/
+func UpdatePaymentMethodIcon(payment_method_id,image_id uuid.UUID)error{
+	body:=PaymentMethod{}
+	body.ImageID=image_id
+	err := db.First(&body,"id = ?",payment_method_id).Updates(&body).Scan(&body).Error
+	if err != nil {
+		log.Println(err.Error())
+		return errors.New("error in updating the payment method icon")
+	}
+	return nil
+}
+/*
+updates insurance icon
+@params insurance_id
+@params image id
+*/
+func UpdateInsuranceIcon(insurance_id,image_id uuid.UUID)error{
+	body:=Insurance{}
+	body.ImageID=image_id
+	err := db.First(&body,"id = ?",insurance_id).Updates(&body).Scan(&body).Error
+	if err != nil {
+		log.Println(err.Error())
+		return errors.New("error in updating the insurance")
+	}
+	return nil
+}
+
+
 /*
 update the profile image
 @params image *Image

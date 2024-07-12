@@ -1,42 +1,38 @@
 package payment
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"github.com/DANCANKARANI/QVP/model"
 	"github.com/DANCANKARANI/QVP/utilities"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
+
 //adding payment handler
 func AddPaymentHandler(c *fiber.Ctx)error{
-	err := model.AddPayment(c)
+	user_id,_:=model.GetAuthUserID(c)
+	payment_method_id,_ := uuid.Parse(c.Query("payment_method_id"))
+	err := model.AddPayment(c,user_id,payment_method_id)
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
 	return utilities.ShowMessage(c,"payments added successfully",fiber.StatusOK)
 }
 
-//get payments made by specific user
+//get payments made by a specific user
 func GetUserPaymentsHandler(c *fiber.Ctx)error{
-	response,err:=model.GetUserPayments(c)
-	if err!=nil{
+	user_id,_:=model.GetAuthUserID(c)
+	payments,err := model.GetUserPayments(c,user_id)
+	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
-	return utilities.ShowSuccess(c,"successfully retrieved the payments details",fiber.StatusOK,response)
-}
-
-//get payments made by specific payment_method
-func GetPaymentMethodPaymentsHandler(c *fiber.Ctx)error{
-	response,err:=model.GetPaymentMethodPayments(c)
-	if err!=nil{
-		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
-	}
-	return utilities.ShowSuccess(c,"successfully retrieved the payments details",fiber.StatusOK,response)
+	
+	return utilities.ShowSuccess(c,"successfully retrieved payments",fiber.StatusOK,payments)
 }
 
 
 //getting all payments
 func GetAllPaymentsHandler(c *fiber.Ctx)error{
-	user_id,_:=model.GetAuthUserID(c)
-	payments,err := model.GetAllPayments(c,user_id)
+	payments,err := model.GetAllPayments(c)
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
@@ -55,7 +51,8 @@ func UpdatePaymentHandler(c *fiber.Ctx)error{
 
 //deletes a row of a payment
 func DeletePaymentHandler(c *fiber.Ctx)error{
-	err:=model.DeletePayment(c)
+	payment_id := c.Params("id")
+	err:=model.DeletePayment(c,payment_id)
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}

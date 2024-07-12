@@ -10,6 +10,7 @@ func SetPaymentRoutes(app *fiber.App) {
 	auth := app.Group("/api/v1/payments")
 	paymentGroup := auth.Group("/",user.JWTMiddleware)
 	paymentGroup.Get("/",payment.GetAllPaymentsHandler)
+	paymentGroup.Get("/:id",payment.GetUserPaymentsHandler)
 	paymentGroup.Post("/",payment.AddPaymentHandler)
 	paymentGroup.Patch("/:id",payment.UpdatePaymentHandler)
 	paymentGroup.Delete("/:id",payment.DeletePaymentHandler)

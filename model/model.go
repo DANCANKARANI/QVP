@@ -2,7 +2,6 @@ package model
 
 import (
 	"time"
-
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -35,6 +34,7 @@ type Image struct {
     Thumbnail    string     `json:"thumbnail" gorm:"type:varchar(255)"`
     Type         string     `json:"type" gorm:"type:varchar(255)"`
     CreatedAt    time.Time  `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt  time.Time    `json:"updated_at" gorm:"autoUpdateTime"`
     DeletedAt  gorm.DeletedAt `json:"deleted_at" gorm:"index"`
     UserID       uuid.UUID  `json:"user_id" gorm:"type:varchar(36)"`
     
@@ -48,7 +48,10 @@ type Dependant struct {
     Status      string    `json:"status" gorm:"size:255"`
     UploadedDate time.Time `json:"uploaded_date"`
     Comments  string      `json:"comments" gorm:"type:text"`
-    InsuranceID uuid.UUID `json:"insurance_id" gorm:"type:varchar(36)"`
+    CreatedAt time.Time    `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt time.Time         `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt gorm.DeletedAt    `json:"deleted_at" gorm:"index"`
+    InsuranceID uuid.UUID `json:"insurance_id" gorm:"type:varchar(36);default:NULL"`
     UserID      uuid.UUID `json:"user_id" gorm:"type:varchar(36);default:NULL"`
     User        User      `json:"user"`
     Insurance  Insurance `json:"insurance"`
@@ -57,11 +60,12 @@ type Dependant struct {
 type Insurance struct {
     ID uuid.UUID                `json:"id" gorm:"type:varchar(36);primary_key"`
     InsuranceName string        `json:"insurance_name" gorm:"type:varchar(50);not null"`
-    PhotoPath string            `json:"photo_path" gorm:"size:1024"`
     Description string          `json:"description" gorm:"type:text"`
     CreatedAt time.Time         `json:"created_at" gorm:"autoCreateTime"`
-    DeletedAt time.Time         `json:"deleted_at" gorm:"autoCreateTime"`
-    UpdatedAt time.Time         `json:"updated_at" gorm:"autoCreateTime"`
+    UpdatedAt time.Time         `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt gorm.DeletedAt    `json:"deleted_at" gorm:"index"`
+    ImageID  uuid.UUID          `json:"image_id" gorm:"type:varchar(36);default:NULL"`
+    Image    Image              `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
     ReceivedBy uuid.UUID        `json:"received_by"`
     Dependants  []Dependant     `gorm:"foreignKey:InsuranceID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
 }
@@ -73,8 +77,8 @@ type Payment struct{
     ResponseDescription string  `json:"response_description" gorm:"type:text"`
     TransactionTime time.Time   `json:"transaction_time" gorm:"autoCreateTime"`
     CreatedAt time.Time         `json:"created_at" gorm:"autoCreateTime"`
-    DeletedAt time.Time         `json:"deleted_at" gorm:"autoCreateTime"`
-    UpdatedAt time.Time         `json:"updated_at" gorm:"autoCreateTime"`
+    DeletedAt gorm.DeletedAt    `json:"deleted_at" gorm:"index"`
+    UpdatedAt time.Time         `json:"updated_at" gorm:"autoUpdateTime"`
     ReceivedBy uuid.UUID        `json:"received_by"`
     UserID  uuid.UUID           `json:"user_id" gorm:"type:varchar(36)"`
     PaymentMethodID uuid.UUID   `json:"payment_method_id" gorm:"type:varchar(36);default:NULL"`
@@ -83,11 +87,12 @@ type Payment struct{
 }
 type PaymentMethod struct {
     ID      uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
-    Title   string              `json:"title" gorm:"type:varchar(36); unique"`
-    IconUrl string              `json:"icon_url" gorm:"type:varchar(1024)"`
+    Title   string              `json:"title" gorm:"type:varchar(36)"`
     CreatedAt time.Time         `json:"created_at" gorm:"autoCreateTime"`
-    DeletedAt time.Time         `json:"deleted_at" gorm:"autoCreateTime"`
-    UpdatedAt time.Time         `json:"updated_at" gorm:"autoCreateTime"`
+    DeletedAt gorm.DeletedAt    `json:"deleted_at" gorm:"index"`
+    UpdatedAt time.Time         `json:"updated_at" gorm:"autoUpdateTime"`
+    ImageID   uuid.UUID `json:"image_id" gorm:"type:varchar(36);default:NULL"`
+    Image     Image     `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
     ReceivedBy uuid.UUID        `json:"received_by" gorm:"type:varchar(255)"` 
     Payments []Payment          `gorm:"foreignKey:PaymentMethodID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;reference:ID"`
 }
@@ -98,7 +103,7 @@ type Notification struct {
     Message   string            `json:"message" gorm:"type:varchar(256)"`
     IsRead    bool              `json:"is_read"`
     CreatedAt time.Time         `json:"created_at" gorm:"autoCreateTime"`
-    DeletedAt time.Time         `json:"deleted_at" gorm:"autoCreateTime"`
+    DeletedAt gorm.DeletedAt    `json:"deleted_at" gorm:"index"`
     UpdatedAt time.Time         `json:"updated_at" gorm:"autoCreateTime"`
     ReceivedBy uuid.UUID        `json:"received_by"`
 }
@@ -138,7 +143,6 @@ type Branch struct {
     UpdatedAt   time.Time           `json:"updated_at" gorm:"type:time; autoCreateTime"`
     Prescriptions []Prescription    `gorm:"foreignKey:BranchID;constraint:OnUpdate:CASCADE;OnDelete:SET NULL;reference:ID"`
 }
-
 
 
 type Admin struct {

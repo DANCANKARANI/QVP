@@ -7,7 +7,7 @@ import (
 )
 
 func UpdateDependant(c *fiber.Ctx)error{
-	dependant_id :=c.Query("id")
+	dependant_id :=c.Params("id")
 	Dependant,err := model.UpdateDependant(c,dependant_id)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)

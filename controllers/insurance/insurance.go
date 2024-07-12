@@ -1,10 +1,14 @@
 package insurance
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"log"
+
 	"github.com/DANCANKARANI/QVP/model"
 	"github.com/DANCANKARANI/QVP/utilities"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
+
 //add insurance handler
 func AddInsuranceHandler(c *fiber.Ctx)error{
 	err := model.AddInsurace(c)
@@ -16,7 +20,12 @@ func AddInsuranceHandler(c *fiber.Ctx)error{
 
 //update insurance handler
 func UpdateInsuranceHandler(c *fiber.Ctx)error{
-	insurance,err := model.UpdateInsurance(c)
+	insurance_id,err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		log.Println(err.Error())
+		return utilities.ShowError(c,"failed to update insurance",fiber.StatusInternalServerError)
+	}
+	insurance,err := model.UpdateInsurance(c,insurance_id)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
