@@ -14,6 +14,7 @@ import (
 
 type Claims struct {
 	UserID *uuid.UUID `json:"user_id"`
+	Role string `json:"role"`
 	jwt.StandardClaims
 }
 //the function loads .env and return the secretKey
@@ -36,6 +37,7 @@ func GenerateToken(claims Claims,expiration_time time.Duration) (string, error) 
 	claims.StandardClaims = jwt.StandardClaims{
 		ExpiresAt: time.Now().Add(expiration_time).Unix(),
 		Issuer:    "qvp",
+		
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

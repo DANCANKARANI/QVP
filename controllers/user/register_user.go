@@ -28,8 +28,9 @@ func CreateUserAccount(c *fiber.Ctx) error {
 	}
 
 	//validate email address
-	if ! utilities.ValidateEmail(user.Email){
-		return utilities.ShowError(c,"inavalid email address", fiber.StatusNotAcceptable)
+	_,err:=utilities.ValidateEmail(user.Email)
+	if err != nil {
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
 	//Check if user exist
 	userExist,_,err:= model.UserExist(c,user.PhoneNumber)
@@ -40,9 +41,9 @@ func CreateUserAccount(c *fiber.Ctx) error {
 		return utilities.ShowError(c,"User with this phone number already exists"+user.PhoneNumber,fiber.StatusConflict)
 	}
 	//validate phone number
-	_,err = utilities.ValidatePhoneNumber(user.PhoneNumber,country_code)
-	if err !=nil{
-		log.Fatal(err.Error())
+	phone,err := utilities.ValidatePhoneNumber(user.PhoneNumber,country_code)
+	if err !=nil || phone ==""{
+		log.Println(err.Error())
 		return utilities.ShowError(c,err.Error(),fiber.StatusAccepted)
 	}
 
