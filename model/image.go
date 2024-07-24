@@ -1,12 +1,21 @@
 package model
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"mime/multipart"
+	"os"
+	"path/filepath"
 	"regexp"
+
+	firebase "firebase.google.com/go/v4"
+	//"firebase.google.com/go/v4/storage"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"google.golang.org/api/option"
 )
 
 func SanitizeFileName(fileName string) string {
@@ -28,7 +37,7 @@ func UploadImage(c *fiber.Ctx,file *multipart.FileHeader)(*Image,error){
 	if err := c.SaveFile(file,"./uploads"+savePath); err != nil{
 		return nil,errors.New("failed to save the file")
 	}
-	image.Path = "./uploads/"+file.Filename
+	image.URL = "./uploads/"+file.Filename
 	db.AutoMigrate(&Image{})
 	//add image and update the user
 	if err:= db.Create(&image).Error; err !=nil {
@@ -111,4 +120,65 @@ func DeleteProfilePhoto(image_id uuid.UUID)error{
 		return errors.New("failed to remove profile image")
 	}
 	return nil
+}
+
+
+func UploadeToFirebaseStorage(filePath,bucketName string)(string, error) {
+	ctx := context.Background()
+	//initialize firebase app
+	sa := option.WithCredentialsFile("./serviceAccountKey.json")
+	app, err:= firebase.NewApp(ctx,nil,sa)
+	if err != nil {
+		return "",fmt.Errorf("error initializing the app: %v",err)
+	}
+
+	//get storage client
+	client,err := app.Storage(ctx)
+	if err != nil {
+		return "",fmt.Errorf("error getting storage client: %v",err)
+	}
+	//get a reference to the storage client
+	bucket, err := client.Bucket(bucketName)
+	if err != nil {
+		return "",fmt.Errorf("error getting bucket: %v",err)
+	}
+
+	//OpenFile
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "",fmt.Errorf("error opening file: %v",err)
+	}
+	defer file.Close()
+	uniqueName := uuid.New().String() + filepath.Ext(filePath)
+
+    // Create a reference to the object you want to upload
+    object := bucket.Object("images/" + uniqueName)
+
+	//upload the file
+	writer :=object.NewWriter(ctx)
+	if _,err = io.Copy(writer,file); err != nil {
+		return "", fmt.Errorf("error copying file: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		return "", fmt.Errorf("error closing writer: %v", err)
+	}
+
+	//get the download URL
+	attrs, err := object.Attrs(ctx)
+	if err != nil {
+		return "", fmt.Errorf("error getting object attributes: %v", err)
+	}
+	downloadURL := attrs.Metadata["access token"]
+	return downloadURL,nil
+}
+
+func InitFirebase(){
+	filePath := "C:/QVP/uploads/2024-07-01 10_51_54.869511 +0300 EAT m=+17.424147001_6.jpg"
+	bucketName := "chat-f427d.appspot.com"
+	downlaodURL,err := UploadeToFirebaseStorage(filePath,bucketName)
+	if err != nil {
+		fmt.Println("error:",err)
+	}else{
+		fmt.Println("Image uploaded to:",downlaodURL)
+	}
 }

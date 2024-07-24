@@ -9,10 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
-//adds role
-func CreateRole(c *fiber.Ctx, body Role)error{
+// adds role
+func CreateRole(c *fiber.Ctx, body Role) error {
+	id := uuid.New()
+	body.ID = id
 	err := db.Create(&body).Error
-	if err != nil{
+	if err != nil {
 		log.Println(err.Error())
 		return errors.New("failed to add role")
 	}
@@ -21,9 +23,9 @@ func CreateRole(c *fiber.Ctx, body Role)error{
 
 //gets roles
 
-func GetRoles(c *fiber.Ctx) (*Role, error) {
-	response := Role{}
-	err := db.Model(&response).Scan(&response).Error
+func GetRoles(c *fiber.Ctx) (*[]Role, error) {
+	response := []Role{}
+	err := db.Model(&Role{}).Scan(&response).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Println(err.Error())
@@ -39,29 +41,34 @@ func GetRoles(c *fiber.Ctx) (*Role, error) {
 updates a role
 @params role_id
 */
-func UpdateRoles(c *fiber.Ctx,role_id uuid.UUID)(*Role,error){
-	body := Role{}
-	if err := c.BodyParser(&body); err != nil {
+func UpdateRole(c *fiber.Ctx, roleID uuid.UUID) (*Role, error) {
+	updatedRole := &Role{}
+
+	// Parse request body into a Role struct
+	if err := c.BodyParser(updatedRole); err != nil {
 		log.Println(err.Error())
 		return nil, errors.New("failed to update role")
 	}
-	err := db.Model(&body).First(&body, "id = ?", role_id).Scan(&body).Error
-	if err != nil{
+
+	// Find the role by roleID and update it with the new data
+	if err := db.First(&Role{},"id = ?", roleID).Updates(updatedRole).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Println(err.Error())
 			return nil, errors.New("no roles found for update")
 		}
 		return nil, errors.New("failed to update role")
 	}
-	return &body,nil
+
+	return updatedRole, nil
 }
+
 /*
 deletes a role
 @params role_id
 */
-func DeleteRole(c *fiber.Ctx,role_id uuid.UUID)error{
-	if err:= db.First(&Role{},"id = ?",role_id).Delete(&Role{}).Error; err != nil {
-		if errors.Is(err,gorm.ErrRecordNotFound){
+func DeleteRole(c *fiber.Ctx, role_id uuid.UUID) error {
+	if err := db.First(&Role{}, "id = ?", role_id).Delete(&Role{}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Println(err.Error())
 			return errors.New("failed to delete role")
 		}

@@ -41,6 +41,7 @@ func GetAllUsersDetails(c *fiber.Ctx)(*[]ResponseUser,error){
 	}
 	return &response,nil
 }
+
 //updates the user by id
 func UpdateUser(c *fiber.Ctx)(*ResponseUser,error){
 	id,err:=GetAuthUserID(c)
@@ -58,6 +59,7 @@ func UpdateUser(c *fiber.Ctx)(*ResponseUser,error){
 	}
 	return &response,nil
 }
+
 
 
 func AddUserInsurance(user_id,insurance_id uuid.UUID)(*InsuranceUser,error){

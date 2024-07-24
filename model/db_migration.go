@@ -17,5 +17,9 @@ func Migration() {
 		&Admin{},
 		&Rider{},
 		&InsuranceUser{},
+		&Role{},
+		&Permission{},
+		&Module{},
+		&Team{},
 	)
 }
