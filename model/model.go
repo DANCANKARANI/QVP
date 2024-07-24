@@ -27,6 +27,7 @@ type User struct {
     Dependants        []Dependant         `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Payment           []Payment           `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Notification      []Notification      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
+    Team              []Team              `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Prescriptions     []Prescription      `gorm:"foreignKey:UserValidatedBy;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
 }
 
@@ -232,10 +233,24 @@ type Module struct {
 //teams db model
 type Team struct{
     ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
-    UserID          uuid.UUID           `json:"user_id" gorm:"type:varchar(36)"`
+    UserID          uuid.UUID           `json:"user_id" gorm:"type:varchar(36); default:NULL"`
     Name            string              `json:"name" gorm:"type:varchar(255)"`
     PersonalTeam    uint64              `json:"personal_team" gorm:"type:tinyint(1)"`
     CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
     UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
     DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`   
+    User            User                `json:"user"`
+    TeamInvitation  []TeamInvitation    `gorm:"foreignKey:TeamID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
+}
+
+//team invitations db model
+type TeamInvitation struct{
+    ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
+    TeamID          uuid.UUID           `json:"team_id" gorm:"type:varchar(36); default:NULL"`
+    Email           string              `json:"email" gorm:"type:varchar(255)"`
+    Role            string              `json:"role" gorm:"type:varchar(255)"`
+    CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`    
+    Team            Team                `json:"team"`      
 }

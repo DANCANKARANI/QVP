@@ -41,21 +41,32 @@ func GetTeams()(*[]Team, error){
 update teams
 @params team_id
 */
-func UpdateTeam(c *fiber.Ctx,team_id uuid.UUID)(*Team,error){
-	team := new(Team)
-	if err:=c.BodyParser(&team); err != nil {
-		log.Println(err.Error())
-		return nil,errors.New("failed to parse json data")
-	}
-	if err := db.First("id = ?", team_id).Updates(&team).Scan(&team).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound){
-			log.Println(err.Error())
-			return nil,errors.New("failed to parse json data")
-		}
-		log.Println(err.Error())
-		return nil,errors.New("failed to update team")
-	}
-	return team,nil
+func UpdateTeam(c *fiber.Ctx, teamID uuid.UUID) (*Team, error) {
+    // Parse the request body into a new team struct
+    updatedTeam := new(Team)
+    if err := c.BodyParser(updatedTeam); err != nil {
+        log.Println(err.Error())
+        return nil, errors.New("failed to parse json data")
+    }
+
+    // Find the existing team in the database
+    var existingTeam Team
+    if err := db.First(&existingTeam, "id = ?", teamID).Error; err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            log.Println(err.Error())
+            return nil, errors.New("record not found")
+        }
+        log.Println(err.Error())
+        return nil, errors.New("failed to find team")
+    }
+
+    // Update the existing team with the new values
+    if err := db.Model(&existingTeam).Updates(updatedTeam).Error; err != nil {
+        log.Println(err.Error())
+        return nil, errors.New("failed to update team")
+    }
+
+    return &existingTeam, nil
 }
 /*
 deletes team
