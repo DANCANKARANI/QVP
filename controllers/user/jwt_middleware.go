@@ -14,7 +14,7 @@ func JWTMiddleware(c *fiber.Ctx) error {
     tokenString := c.Cookies("Authorization")
 
     // If not found in cookies, check the Authorization header
-    if tokenString != "" {
+    if tokenString == "" {
         authHeader := c.Get("Authorization")
         if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
             tokenString = strings.TrimPrefix(authHeader, "Bearer ")
