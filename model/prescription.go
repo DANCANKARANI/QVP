@@ -14,9 +14,7 @@ var vatRate = 16.0
 /*
 Adds prescription 
 @params c *friber.Ctx
-@params rider_id
 @params user_id
-@params admin_id
 */
 func AddPrescription(c *fiber.Ctx,user_id uuid.UUID) (*Prescription, error) {
 	db.AutoMigrate(&Prescription{})
@@ -60,8 +58,6 @@ func GetUsersPrescription(c *fiber.Ctx, id uuid.UUID) (*[]Prescription, error) {
 updates the prescription
 @params id
 @params user_id
-@params rider_id
-@params admin_id
 */
 func UpdatePrescription(c *fiber.Ctx,id,user_id uuid.UUID)(*Prescription,error){
 	body := Prescription{}
@@ -77,8 +73,9 @@ func UpdatePrescription(c *fiber.Ctx,id,user_id uuid.UUID)(*Prescription,error){
 	body.VAT=prescription.VAT
 	body.Total=prescription.Total
 	body.UserApprovedBy=user_id
-	err := db.First(&Prescription{},"id = ?",id).Updates(&body).Error
+	err := db.First(&Prescription{},"id = ?",id).Updates(&body).Scan(&body).Error
 	if err != nil {
+		log.Println(err.Error())
 		return nil,errors.New("failed to update prescription")
 	}
 	return &body,nil
