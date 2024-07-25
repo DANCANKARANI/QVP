@@ -62,3 +62,12 @@ func DeletePrescriptionHandler(c *fiber.Ctx)error{
 	}
 	return utilities.ShowMessage(c,"prescription deleted successfully",fiber.StatusOK)
 }
+
+//gets all the pagineted prescriptions
+func GetAllPrescriptionsHandler(c *fiber.Ctx)error{
+	response,code,err:=model.GetPaginatePrescriptions(c)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),code)
+	}
+	return utilities.ShowSuccess(c,"successfully retrieved presicriptions",code,response)
+}

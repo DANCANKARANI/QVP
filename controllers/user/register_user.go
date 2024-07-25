@@ -23,7 +23,7 @@ func CreateUserAccount(c *fiber.Ctx) error {
 	id := uuid.New()
 	user:=model.User{}
 	if err :=c.BodyParser(&user); err != nil {
-		log.Fatal(err.Error())
+		log.Println(err.Error())
 		return utilities.ShowError(c,"failed to create account", fiber.StatusInternalServerError)
 	}
 

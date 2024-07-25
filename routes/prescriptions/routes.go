@@ -7,11 +7,11 @@ import (
 )
 
 func SetPrescriptionRoutes(app *fiber.App) {
-
 	auth := app.Group("/api/v1/prescription")
 	prescriptionGroup := auth.Group("/",user.JWTMiddleware)
 	prescriptionGroup.Post("/",prescription.AddPrescriptionHandler)
 	prescriptionGroup.Get("/",prescription.GetPrescriptionsHandler)
 	prescriptionGroup.Patch("/:id",prescription.UpdatePrescriptionHandler)
 	prescriptionGroup.Delete("/:id",prescription.DeletePrescriptionHandler)
+	prescriptionGroup.Get("/all",prescription.GetAllPrescriptionsHandler)
 }

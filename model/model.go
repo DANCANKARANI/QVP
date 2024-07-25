@@ -23,7 +23,7 @@ type User struct {
     UpdatedAt         time.Time           `json:"updated_at" gorm:"autoCreateTime"`
     ImageID           uuid.UUID           `json:"image_id" gorm:"type:varchar(36);default:NULL"`
     Image             Image               `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
-    Insurance         Insurance           `gorm:"many2many:insurance_users"`
+   // Insurance         Insurance           `gorm:"many2many:insurance_users"`
     Dependants        []Dependant         `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Payment           []Payment           `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Notification      []Notification      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
