@@ -18,7 +18,7 @@ Adds prescription
 @params user_id
 @params admin_id
 */
-func AddPrescription(c *fiber.Ctx,user_id, rider_id,admin_id uuid.UUID) (*Prescription, error) {
+func AddPrescription(c *fiber.Ctx,user_id uuid.UUID) (*Prescription, error) {
 	db.AutoMigrate(&Prescription{})
 	body := Prescription{}
 	if err:=c.BodyParser(&body);err != nil {
@@ -32,11 +32,8 @@ func AddPrescription(c *fiber.Ctx,user_id, rider_id,admin_id uuid.UUID) (*Prescr
 	body.SubTotal = prescription.SubTotal
 	body.VAT=prescription.VAT
 	body.Total=prescription.Total
-	body.AdminApprovedBy=admin_id
-	body.DeliveredBy = rider_id
 	body.UserApprovedBy = user_id
 	body.UserValidatedBy = user_id
-	body.AdminApprovedBy = admin_id
 	body.ID = uuid.New()
 	err:=db.Create(&body).Error
 	if err != nil {
@@ -48,15 +45,12 @@ func AddPrescription(c *fiber.Ctx,user_id, rider_id,admin_id uuid.UUID) (*Prescr
 Gets users prescriptions
 @params id
 */
-func GetUsersPrescription(c *fiber.Ctx, id string) (*Prescription, error) {
+func GetUsersPrescription(c *fiber.Ctx, id uuid.UUID) (*Prescription, error) {
     response := Prescription{}
-    err := db.Preload("User").Preload("Image").First(&response, "user_approved_by = ?", id).Error
+    err := db.Preload("User").First(&response, "user_approved_by = ?", id).Error
     if err != nil {
-        if errors.Is(err, gorm.ErrRecordNotFound) {
-            log.Printf("No prescription found for user with ID %s", id)
-            return nil, fiber.NewError(fiber.StatusNotFound, "No prescription found")
-        }
-        log.Printf("Error retrieving prescription for user with ID %s: %v", id, err)
+        
+        log.Println(err.Error())
         return nil, errors.New("failed to get prescriptions")
     }
     return &response, nil
@@ -69,7 +63,7 @@ updates the prescription
 @params rider_id
 @params admin_id
 */
-func UpdatePrescription(c *fiber.Ctx,id,user_id,rider_id,admin_id uuid.UUID)(*Prescription,error){
+func UpdatePrescription(c *fiber.Ctx,id,user_id uuid.UUID)(*Prescription,error){
 	body := Prescription{}
 	prescription := Prescription{
 		SubTotal:body.SubTotal,
@@ -83,10 +77,6 @@ func UpdatePrescription(c *fiber.Ctx,id,user_id,rider_id,admin_id uuid.UUID)(*Pr
 	body.VAT=prescription.VAT
 	body.Total=prescription.Total
 	body.UserApprovedBy=user_id
-	body.DeliveredBy = rider_id
-	body.UserValidatedBy=admin_id
-	body.AdminApprovedBy = admin_id
-	body.AdminValidateBy = admin_id
 	err := db.First(&Prescription{},"id = ?",id).Updates(&body).Error
 	if err != nil {
 		return nil,errors.New("failed to update prescription")
