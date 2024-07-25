@@ -45,15 +45,15 @@ func AddPrescription(c *fiber.Ctx,user_id uuid.UUID) (*Prescription, error) {
 Gets users prescriptions
 @params id
 */
-func GetUsersPrescription(c *fiber.Ctx, id uuid.UUID) (*Prescription, error) {
-    response := Prescription{}
+func GetUsersPrescription(c *fiber.Ctx, id uuid.UUID) (*[]Prescription, error) {
+    response := new([]Prescription)
     err := db.Preload("User").First(&response, "user_approved_by = ?", id).Error
     if err != nil {
         
         log.Println(err.Error())
         return nil, errors.New("failed to get prescriptions")
     }
-    return &response, nil
+    return response, nil
 }
 
 /*
