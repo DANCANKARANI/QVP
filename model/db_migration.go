@@ -21,5 +21,7 @@ func Migration() {
 		&Permission{},
 		&Module{},
 		&Team{},
+		&TeamInvitation{},
+		&QuoteDetail{},
 	)
 }

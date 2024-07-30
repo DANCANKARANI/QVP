@@ -38,7 +38,8 @@ func CreateUserAccount(c *fiber.Ctx) error {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
 	if userExist{
-		return utilities.ShowError(c,"User with this phone number already exists"+user.PhoneNumber,fiber.StatusConflict)
+		errStr := "user with this phone no. "+user.PhoneNumber+" already exists"
+		return utilities.ShowError(c,errStr,fiber.StatusConflict)
 	}
 	//validate phone number
 	phone,err := utilities.ValidatePhoneNumber(user.PhoneNumber,country_code)

@@ -21,9 +21,9 @@ type User struct {
     CreatedAt         time.Time           `json:"created_at" gorm:"autoCreateTime"`
     DeletedAt         gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
     UpdatedAt         time.Time           `json:"updated_at" gorm:"autoCreateTime"`
-    ImageID           uuid.UUID           `json:"image_id" gorm:"type:varchar(36);default:NULL"`
-    Image             Image               `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
-   // Insurance         Insurance           `gorm:"many2many:insurance_users"`
+    ImageID           *uuid.UUID           `json:"image_id" gorm:"type:varchar(36);default:NULL"`
+    Image             *Image               `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+    Insurance         []Insurance           `gorm:"many2many:insurance_users"`
     Dependants        []Dependant         `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Payment           []Payment           `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Notification      []Notification      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
@@ -133,6 +133,7 @@ type Prescription struct {
     AdminApprovedBy  uuid.UUID      `json:"admin_approved_by" gorm:"type:varchar(36);default:NULL"`
     DeliveredAt      *time.Time     `json:"delivered_at"`
     DeliveredBy      uuid.UUID      `json:"delivered_by" gorm:"type:varchar(36); default:NULL"`
+    QuoteDetail     []QuoteDetail   `gorm:"foreignKey:PrescriptionID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     // Relationships
     User             User           `json:"user" gorm:"foreignKey:UserValidatedBy"`
     Admin            Admin          `json:"admin" gorm:"foreignKey:AdminApprovedBy"`
@@ -253,4 +254,19 @@ type TeamInvitation struct{
     UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
     DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`    
     Team            Team                `json:"team"`      
+}
+type QuoteDetail struct{
+    ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
+    PrescriptionID  uuid.UUID           `json:"prescription_id" gorm:"type:varchar(36); default:NULL"`
+    Description     string              `json:"description" gorm:"type:varchar(255)"`
+    Unit            float64             `json:"unit" gorm:"type:double"`
+    Quantity        float64             `json:"quantity" gorm:"type:double"`
+    Measure         string              `json:"measure" gorm:"type:varchar(255)"`
+    Price           float64             `json:"price" gorm:"type:double"`
+    Discount        float64             `json:"discount" gorm:"type:double"`
+    Vat             float64             `json:"vat" gorm:"type: double"`
+    Total           float64             `json:"total" gorm:"type:double"`
+    CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
 }

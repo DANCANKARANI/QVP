@@ -9,6 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
+
+type ResponseTeam struct{
+	
+}
 //creates a new team
 func CreateTeam(c *fiber.Ctx) (*Team, error) {
  team := new(Team)

@@ -4,14 +4,17 @@ import (
 	"github.com/DANCANKARANI/QVP/routes/dependants"
 	"github.com/DANCANKARANI/QVP/routes/images"
 	"github.com/DANCANKARANI/QVP/routes/insurance"
+	"github.com/DANCANKARANI/QVP/routes/insurance_users"
 	"github.com/DANCANKARANI/QVP/routes/modules"
 	"github.com/DANCANKARANI/QVP/routes/notifications"
 	"github.com/DANCANKARANI/QVP/routes/payment_methods"
 	"github.com/DANCANKARANI/QVP/routes/payments"
 	"github.com/DANCANKARANI/QVP/routes/permissions"
 	"github.com/DANCANKARANI/QVP/routes/prescriptions"
+	"github.com/DANCANKARANI/QVP/routes/quote_details"
 	"github.com/DANCANKARANI/QVP/routes/riders"
 	"github.com/DANCANKARANI/QVP/routes/roles"
+	"github.com/DANCANKARANI/QVP/routes/team_invitations"
 	"github.com/DANCANKARANI/QVP/routes/teams"
 	"github.com/DANCANKARANI/QVP/routes/users"
 	"github.com/gofiber/fiber/v2"
@@ -41,6 +44,9 @@ func CreateEndpoint(){
 	permissions.SetPermissionRoutes(app)
 	modules.SetModulesRoutes(app)
 	teams.SetTeamRoutes(app)
+	team_invitations.SetTeamInvitationRoutes(app)
+	insurance_users.SetInsuranceUserRoutes(app)
+	quote_details.SetQuoteDetailsRoutes(app)
 	//port
 	app.Listen(":3000")
 }

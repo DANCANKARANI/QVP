@@ -56,7 +56,7 @@ updates user
 */
 func UpdateUserProfile(user_id,image_id uuid.UUID)(error){
 	body:=User{}
-	body.ImageID=image_id
+	body.ImageID=&image_id
 	err := db.First(&User{},"id = ?",user_id).Updates(&body).Scan(&body).Error
 	if err != nil {
 		log.Println(err.Error())
