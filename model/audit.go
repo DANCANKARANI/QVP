@@ -1,7 +1,9 @@
 package model
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"reflect"
 	"time"
@@ -11,19 +13,18 @@ import (
 	"gorm.io/gorm"
 )
 
-// Middleware to set userID in GORM context
-func SetUserIDMiddleware(db *gorm.DB) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		userID, ok := c.Locals("user_id").(*uuid.UUID)
-		if !ok {
-			return c.Status(fiber.StatusUnauthorized).SendString("Unauthorized: Invalid user ID")
-		}
-		log.Println("SetUserIDMiddleware - userID:", userID)
-		id := *userID
+type contextKey string
 
-		// Add userID to GORM session
-		tx := db.Session(&gorm.Session{Context: c.Context()}).Set("userID", id)
-		
+const fiberCtxKey contextKey = "fiberCtx"
+
+// Function to inject Fiber context into GORM context
+func InjectFiberCtxMiddleware(db *gorm.DB) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// Create a new context with the Fiber context stored in it
+		ctx := context.WithValue(c.Context(), fiberCtxKey, c)
+		// Use this new context in the GORM session
+		tx := db.Session(&gorm.Session{Context: ctx})
+		// Store the session with the modified context in Fiber context
 		c.Locals("db", tx)
 		return c.Next()
 	}
@@ -31,35 +32,54 @@ func SetUserIDMiddleware(db *gorm.DB) fiber.Handler {
 
 // Hook after update to create audit log
 func AfterUpdate(tx *gorm.DB) {
-	if err := CreateAuditLog(tx, "UPDATE", tx.Statement.ReflectValue); err != nil {
-		log.Printf("Error creating audit log: %v", err)
+	// Extract Fiber context from GORM context
+	if ctx := tx.Statement.Context; ctx != nil {
+		if fiberCtx, ok := ctx.Value(fiberCtxKey).(*fiber.Ctx); ok {
+			if err := CreateAuditLog(tx, fiberCtx, "UPDATE", tx.Statement.ReflectValue); err != nil {
+				log.Printf("Error creating audit log: %v", err)
+			}
+		} else {
+			log.Println("Fiber context not found in GORM context")
+		}
+	} else {
+		log.Println("Context not found in GORM statement")
 	}
 }
 
 // Function to create audit log
-func CreateAuditLog(tx *gorm.DB, event string, model reflect.Value) error {
+func CreateAuditLog(tx *gorm.DB, c *fiber.Ctx, event string, model reflect.Value) error {
 	oldValues, _ := tx.Statement.Get("old_values")
 	newValues, err := json.Marshal(model.Interface())
 	if err != nil {
 		return err
 	}
 
-	userID, _ := tx.Get("userID")
-	id:=userID.(uuid.UUID)
+	// Retrieve userID from Fiber context
+	userID, ok := c.Locals("user_id").(uuid.UUID)
+	if !ok {
+		return fmt.Errorf("userID not found in context")
+	}
+
+	// Retrieve IP address from Fiber context
+	ip, ok := c.Locals("ip_address").(string)
+	if !ok {
+		ip = "unknown"
+	}
+
 	auditableType := getTypeName(model.Interface())
 	auditableID := getModelID(model)
 
 	audit := Audit{
 		UserType:      "user",
-		UserID:        id,
+		UserID:        userID,
 		Event:         event,
 		AuditableType: auditableType,
 		AuditableID:   auditableID,
 		OldValues:     oldValues.(string),
 		NewValues:     string(newValues),
-		Url:           "", // Set to the actual URL from context if needed
-		IpAddress:     "", // Set to the actual IP address from context if needed
-		UserAgent:     "", // Set to the actual User-Agent from context if needed
+		Url:           c.OriginalURL(),
+		IpAddress:     ip,
+		UserAgent:     c.Get("User-Agent"),
 		Tags:          "",
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
@@ -67,7 +87,6 @@ func CreateAuditLog(tx *gorm.DB, event string, model reflect.Value) error {
 
 	return tx.Create(&audit).Error
 }
-
 
 // Helper function to get model ID
 func getModelID(model reflect.Value) uuid.UUID {

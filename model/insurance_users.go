@@ -74,7 +74,6 @@ func GetUsersWithInsurance()(*ResponseUser,error){
 		FullName: user.FullName,
 		Email: user.Email,
 		PhoneNumber: user.PhoneNumber,
-		Insurance: user.Insurance,
 	},nil
 }
 
