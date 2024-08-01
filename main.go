@@ -8,6 +8,7 @@ import(
 func main() {
 	model.Migration()
 	model.InitFirebase()
+	model.RegisterHooks()
 	//database.StartRedisServer()
 	endpoints.CreateEndpoint()
 }

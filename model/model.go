@@ -29,6 +29,7 @@ type User struct {
     Notification      []Notification      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Team              []Team              `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Prescriptions     []Prescription      `gorm:"foreignKey:UserValidatedBy;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
+    Audits            []Audit             `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
 }
 
 type Image struct {
@@ -270,4 +271,34 @@ type QuoteDetail struct{
     UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
     DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
     Prescription    Prescription        `json:"prescription"`
+}
+//audits db model
+type Audit struct{
+    ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
+    UserType        string              `json:"user_type" gorm:"type:varchar(255)"`
+    UserID          uuid.UUID           `json:"user_id" gorm:"type:varchar(36); default:NULL"`
+    Event           string              `json:"event" gorm:"type:varchar(255)"`
+    AuditableType   string              `json:"auditable_type" gorm:"type:varchar(255)"`
+    AuditableID     uuid.UUID           `json:"auditable_id" gorm:"type:varchar(255)"`
+    OldValues       string              `json:"old_values" gorm:"type:text"`
+    NewValues       string              `json:"new_vaalues" gorm:"type:text"`
+    Url             string              `json:"url" gorm:"type:text"`
+    IpAddress       string              `json:"ip_address" gorm:"type:varchar(45)"`
+    UserAgent       string              `json:"user_agent" gorm:"type:varchar(1024)"`
+    Tags            string              `json:"tags" gorm:"type:varchar(255)"`
+    CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
+    User            User                `json:"user"`
+}
+
+//failed jobs db model
+type FailedJob struct{
+    ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
+    Uuid            string              `json:"uuid" gorm:"type:varchar(255)"`
+    Connection      string              `json:"connection" gorm:"type:text"`
+    Queue           string              `json:"queue" gorm:"type:text"`
+    Payload         string              `json:"payload" gorm:"type:longtext"`
+    Exception       string              `json:"exception" gorm:"type:longtext"`
+    FailedAt        time.Time           `json:"failed_at" gorm:"type:timestamp"`
 }

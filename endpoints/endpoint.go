@@ -1,6 +1,7 @@
 package endpoints
 
 import (
+	//"github.com/DANCANKARANI/QVP/routes/audits"
 	"github.com/DANCANKARANI/QVP/routes/dependants"
 	"github.com/DANCANKARANI/QVP/routes/images"
 	"github.com/DANCANKARANI/QVP/routes/insurance"
@@ -20,17 +21,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
-
 func CreateEndpoint(){
 	app := fiber.New()
-
+	
 	// Add CORS middleware
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*", // Allow all origins, change this to specific origins in production
 		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization", 
 	}))
-
 	dependants.SetDependantRoutes(app)
 	users.SetUserRoutes(app)
 	payment_methods.SetPaymentMethodRoutes(app)
@@ -47,6 +46,8 @@ func CreateEndpoint(){
 	team_invitations.SetTeamInvitationRoutes(app)
 	insurance_users.SetInsuranceUserRoutes(app)
 	quote_details.SetQuoteDetailsRoutes(app)
+	
+	//audits.SetAuditsRoutes(app)
 	//port
 	app.Listen(":3000")
 }

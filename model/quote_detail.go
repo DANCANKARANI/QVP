@@ -47,13 +47,13 @@ updates quote detail
 func UpdateQuoteDetail(c *fiber.Ctx, quote_detail_id uuid.UUID) (*ResponseQuote,int,error){
 	body := QuoteDetail{}
 	response :=  new(ResponseQuote)
-	//body.CalculateVAT(vatRate)
 	//parse request body into quoteDetail
 	if err := c.BodyParser(&body); err != nil {
 		log.Println(err.Error())
 		return nil,fiber.StatusInternalServerError, errors.New("failed to parse json data")
 	}
 	//find the record
+	body.CalculateVAT(vatRate)
 	if err := db.First(&QuoteDetail{}, "id = ?",quote_detail_id).Updates(&body).Scan(&response).Error; err != nil{
 		if errors.Is(err, gorm.ErrRecordNotFound){
 			log.Println(err.Error())
@@ -107,5 +107,4 @@ func (q *QuoteDetail) CalculateVAT(vatRate float64){
 	q.Vat = q.Price *vatRate/100
 	q.Total = q.Price+q.Vat- q.Discount
 }
-
 //func HandleDbError(err error)()

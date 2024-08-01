@@ -33,7 +33,9 @@ func JWTMiddleware(c *fiber.Ctx) error {
         log.Println(err.Error())
         return utilities.ShowError(c, "unauthorized", fiber.StatusUnauthorized)
     }
-
+    //get ipd address and store in context
+    ip := c.IP()
+    c.Locals("ip_address", ip)
     // Store the userID in context
     c.Locals("user_id", claims.UserID)
     return c.Next()
