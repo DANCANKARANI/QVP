@@ -3,6 +3,7 @@ package prescription
 import (
 	"errors"
 	"log"
+
 	"github.com/DANCANKARANI/QVP/model"
 	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/gofiber/fiber/v2"
@@ -71,3 +72,35 @@ func GetAllPrescriptionsHandler(c *fiber.Ctx)error{
 	}
 	return utilities.ShowSuccess(c,"successfully retrieved presicriptions",code,response)
 }
+//update prescription detail handler
+func UpdatePrescriptionDetailHandler(c *fiber.Ctx)error{
+	prescription_detail_id, _:=uuid.Parse(c.Params("id"))
+	log.Println(prescription_detail_id)
+	prescription_id, _:=uuid.Parse(c.Params("prescription_id"))
+	response, err := model.UpdatePrescriptionDetails(c,prescription_detail_id,prescription_id)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	return utilities.ShowSuccess(c,"successfully updated user's prescription details",fiber.StatusOK,response)
+}
+//add prescription details handler
+func AddPrescriptionDetailHandler(c *fiber.Ctx)error{
+	prescription_id,_ := uuid.Parse(c.Params("prescription_id"))
+	log.Println(prescription_id)
+	response, err := model.AddPrescriptionDetail(c,prescription_id)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	return utilities.ShowSuccess(c,"successfully added prescription details",fiber.StatusOK,response)
+	 
+}
+//gets users prescription details
+func GetUsersPrescriptionDetailHandler(c *fiber.Ctx)error{
+	user_id,_:= model.GetAuthUserID(c)
+	response, err := model.GetUsersPrescriptionDetails(c,user_id)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	return utilities.ShowSuccess(c,"successfully retrieved users prescription details",fiber.StatusOK,response)
+}
+

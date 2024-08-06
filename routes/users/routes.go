@@ -1,11 +1,11 @@
 package users
 
 import (
+	"github.com/DANCANKARANI/QVP/controllers/team_user"
 	"github.com/DANCANKARANI/QVP/controllers/user"
-	"github.com/DANCANKARANI/QVP/database"
 	"github.com/gofiber/fiber/v2"
 )
-var db =database.ConnectDB()
+
 func SetUserRoutes(app *fiber.App) {
 	auth := app.Group("/api/v1/user")
 	auth.Post("/",user.CreateUserAccount)
@@ -21,4 +21,7 @@ func SetUserRoutes(app *fiber.App) {
 	userGroup.Post("/reset-password",user.ResetPassword)
 	userGroup.Get("/logout",user.Logout)
 	userGroup.Patch("/:id",user.UpdateUserHandler)
+
+	//get teams for a user
+	userGroup.Get("/:user_id/teams",team_user.GetTeamsForUserHandler)
 }

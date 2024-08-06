@@ -1,128 +1,89 @@
 package model
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"reflect"
-	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+func LogChanges(db *gorm.DB, event string, model interface{}) {
+    modelType := reflect.TypeOf(model)
+    modelValue := reflect.ValueOf(model)
 
-type contextKey string
+    // Handle pointers to models
+    if modelValue.Kind() == reflect.Ptr {
+        modelValue = modelValue.Elem()
+        modelType = modelType.Elem()
+    }
 
-const fiberCtxKey contextKey = "fiberCtx"
+    idField := modelValue.FieldByName("ID")
+    if !idField.IsValid() {
+        log.Fatal("ID field not found in model")
+    }
+    idValue := idField.Interface()
 
-// Function to inject Fiber context into GORM context
-func InjectFiberCtxMiddleware(db *gorm.DB) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		// Create a new context with the Fiber context stored in it
-		ctx := context.WithValue(c.Context(), fiberCtxKey, c)
-		// Use this new context in the GORM session
-		tx := db.Session(&gorm.Session{Context: ctx})
-		// Store the session with the modified context in Fiber context
-		c.Locals("db", tx)
-		return c.Next()
-	}
+    // Create a new transaction for reading
+    tx := db.Begin()
+    if err := tx.Error; err != nil {
+        log.Fatalf("Failed to begin transaction: %v", err)
+    }
+    defer func() {
+        if r := recover(); r != nil {
+            tx.Rollback()
+        }
+    }()
+
+    oldModel := reflect.New(modelType).Interface()
+    err := tx.Where("id = ?", idValue).First(oldModel).Error
+    if err != nil {
+        log.Printf("Error retrieving old model: %v", err)
+        tx.Rollback()
+        return
+    }
+
+    tx.Commit() // End read transaction
+
+    oldValues, _ := json.Marshal(oldModel)
+    newValues, _ := json.Marshal(model)
+
+    audit := Audit{
+        UserType:       "system",
+        UserID:         uuid.Nil,
+        Event:          event,
+        AuditableType:  modelType.Name(),
+        AuditableID:    idValue.(uuid.UUID),
+        OldValues:      string(oldValues),
+        NewValues:      string(newValues),
+    }
+
+    // Start a new transaction for writing
+    tx = db.Begin()
+    if err := tx.Error; err != nil {
+        log.Fatalf("Failed to begin transaction: %v", err)
+    }
+
+    if err := tx.Create(&audit).Error; err != nil {
+        log.Fatalf("Failed to create audit record: %v", err)
+    }
+
+    tx.Commit() // Commit write transaction
 }
 
-// Hook after update to create audit log
-func AfterUpdate(tx *gorm.DB) {
-	// Extract Fiber context from GORM context
-	if ctx := tx.Statement.Context; ctx != nil {
-		if fiberCtx, ok := ctx.Value(fiberCtxKey).(*fiber.Ctx); ok {
-			if err := CreateAuditLog(tx, fiberCtx, "UPDATE", tx.Statement.ReflectValue); err != nil {
-				log.Printf("Error creating audit log: %v", err)
-			}
-		} else {
-			log.Println("Fiber context not found in GORM context")
-		}
-	} else {
-		log.Println("Context not found in GORM statement")
-	}
-}
 
-// Function to create audit log
-func CreateAuditLog(tx *gorm.DB, c *fiber.Ctx, event string, model reflect.Value) error {
-	oldValues, _ := tx.Statement.Get("old_values")
-	newValues, err := json.Marshal(model.Interface())
-	if err != nil {
-		return err
-	}
-
-	// Retrieve userID from Fiber context
-	userID, ok := c.Locals("user_id").(uuid.UUID)
-	if !ok {
-		return fmt.Errorf("userID not found in context")
-	}
-
-	// Retrieve IP address from Fiber context
-	ip, ok := c.Locals("ip_address").(string)
-	if !ok {
-		ip = "unknown"
-	}
-
-	auditableType := getTypeName(model.Interface())
-	auditableID := getModelID(model)
-
-	audit := Audit{
-		UserType:      "user",
-		UserID:        userID,
-		Event:         event,
-		AuditableType: auditableType,
-		AuditableID:   auditableID,
-		OldValues:     oldValues.(string),
-		NewValues:     string(newValues),
-		Url:           c.OriginalURL(),
-		IpAddress:     ip,
-		UserAgent:     c.Get("User-Agent"),
-		Tags:          "",
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	}
-
-	return tx.Create(&audit).Error
-}
-
-// Helper function to get model ID
-func getModelID(model reflect.Value) uuid.UUID {
-	if model.Kind() == reflect.Ptr {
-		model = model.Elem()
-	}
-	idField := model.FieldByName("ID")
-	if idField.IsValid() && idField.CanInterface() {
-		switch v := idField.Interface().(type) {
-		case uuid.UUID:
-			return v
-		case string:
-			id, err := uuid.Parse(v)
-			if err != nil {
-				log.Printf("Error parsing string ID to UUID: %v", err)
-				return uuid.Nil
-			}
-			return id
-		default:
-			log.Printf("Unsupported ID type: %T", v)
-			return uuid.Nil
-		}
-	}
-	return uuid.Nil
-}
-
-// Helper function to get type name of model
-func getTypeName(model interface{}) string {
-	t := reflect.TypeOf(model)
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-	return t.Name()
-}
-
-// Function to register GORM hooks
+// registers hooks
 func RegisterHooks() {
-	db.Callback().Update().After("gorm:after_update").Register("after_update_audit", AfterUpdate)
+	// db.Callback().Create().Before("gorm:before_update").Register("audit:before_update", func(tx *gorm.DB) {
+	// 	log.Println("before update")
+	// })
+	// db.Callback().Create().After("gorm:after_create").Register("audit:after_create", func(tx *gorm.DB) {
+	// 	LogChanges(tx, "create")
+	// })
+	// db.Callback().Update().After("gorm:after_update").Register("audit:after_update", func(tx *gorm.DB) {
+	// 	LogChanges(tx, "update")
+	// })
+	// db.Callback().Delete().After("gorm:after_delete").Register("audit:after_delete", func(tx *gorm.DB) {
+	// 	LogChanges(tx, "delete")
+	// })
 }

@@ -11,7 +11,6 @@ type User struct {
     FullName          string              `json:"full_name" gorm:"size:255"`
     Email             string              `json:"email" gorm:"size:255;unique"`
     PhoneNumber       string              `json:"phone_number" gorm:"size:255;unique"`
-    IdNumber          string              `json:"id_number" gorm:"size:255;unique"`
     CountryCode       string              `json:"country_code" gorm:"size:10"`
     Password          string              `json:"password" gorm:"size:255"`
     ConfirmPassword   string              `json:"confirm_password" gorm:"size:255"`     
@@ -27,7 +26,7 @@ type User struct {
     Dependants        []Dependant         `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Payment           []Payment           `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Notification      []Notification      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
-    Team              []Team              `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
+    Team              []Team              `gorm:"many2many:team_users"`
     Prescriptions     []Prescription      `gorm:"foreignKey:UserValidatedBy;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Audits            []Audit             `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
 }
@@ -113,13 +112,14 @@ type Notification struct {
     UpdatedAt time.Time         `json:"updated_at" gorm:"autoCreateTime"`
     ReceivedBy uuid.UUID        `json:"received_by"`
 }
-
+//prescription db model
 type Prescription struct {
     ID               uuid.UUID      `json:"id" gorm:"type:varchar(36);primary_key"`
     QuoteNumber      string         `json:"quote_number" gorm:"size:255"`
     SubTotal         float64        `json:"sub_total" gorm:"type:decimal(8,2)"`
     VAT              float64        `json:"vat" gorm:"type:decimal(8,2)"`
     Total            float64        `json:"total" gorm:"type:decimal(8,2)"`
+    PrescriptionDetailID  uuid.UUID `json:"prescription_detail_id" gorm:"type:varchar(36)"`
     CreatedAt        time.Time      `json:"created_at" gorm:"autoCreateTime"`
     UpdatedAt        time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
     DeletedAt        gorm.DeletedAt `json:"deleted_at" gorm:"index"`
@@ -139,6 +139,19 @@ type Prescription struct {
     User             User           `json:"user" gorm:"foreignKey:UserValidatedBy"`
     Admin            Admin          `json:"admin" gorm:"foreignKey:AdminApprovedBy"`
     Rider            Rider          `json:"rider" gorm:"foreignKey:DeliveredBy"`
+    PrescriptionDetail []PrescriptionDetail `gorm:"foreignKey:PrescriptionID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
+    
+}
+//prescription detail db model
+type PrescriptionDetail struct{
+    ID                  uuid.UUID       `json:"id" gorm:"type:varchar(36);primary_key"`
+    PrescriptionID      uuid.UUID       `json:"prescription_id" gorm:"type:varchar(36) default:NULL"`
+    PrescriptionPath   string          `json:"prescription_detail" gorm:"type:varchar(1024)"`
+    ClaimPath          string          `json:"claim_form" gorm:"type:varchar(1024)"`
+    OtherFormPath     string          `json:"other_form_path" gorm:"type:varchar(1024)"`
+    CreatedAt           time.Time       `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt           time.Time       `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt           gorm.DeletedAt  `json:"deleted_at" gorm:"index"`
 }
 
 type Branch struct {
@@ -146,8 +159,9 @@ type Branch struct {
     Name string                     `json:"name" gorm:"type:varchar(255)"`
     Location string                 `json:"location" gorm:"type:varchar(255)"`
     Description string              `json:"description" gorm:"type:text"`
-    CreatedAt   time.Time           `json:"created_at" gorm:"type:time; autoCreateTime"`
-    UpdatedAt   time.Time           `json:"updated_at" gorm:"type:time; autoCreateTime"`
+    CreatedAt       time.Time       `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt       time.Time       `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt       gorm.DeletedAt  `json:"deleted_at" gorm:"index"`
     Prescriptions []Prescription    `gorm:"foreignKey:BranchID;constraint:OnUpdate:CASCADE;OnDelete:SET NULL;reference:ID"`
 }
 
@@ -235,14 +249,23 @@ type Module struct {
 //teams db model
 type Team struct{
     ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
-    UserID          uuid.UUID           `json:"user_id" gorm:"type:varchar(36); default:NULL"`
     Name            string              `json:"name" gorm:"type:varchar(255)"`
     PersonalTeam    uint64              `json:"personal_team" gorm:"type:tinyint(1)"`
     CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
     UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
     DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`   
-    User            User                `json:"user"`
+    User            []User              `gorm:"many2many:team_users"`
     TeamInvitation  []TeamInvitation    `gorm:"foreignKey:TeamID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
+}
+//
+type TeamUser struct{
+    ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
+    UserID          uuid.UUID           `json:"user_id" gorm:"type:varchar(36); default:NULL"`
+    TeamID          uuid.UUID           `json:"team_id" gorm:"type:varchar(36); default:NULL"`
+    Role            string              `json:"role" gorm:"type:varchar(255)"`
+    CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"` 
 }
 
 //team invitations db model
@@ -281,7 +304,7 @@ type Audit struct{
     AuditableType   string              `json:"auditable_type" gorm:"type:varchar(255)"`
     AuditableID     uuid.UUID           `json:"auditable_id" gorm:"type:varchar(255)"`
     OldValues       string              `json:"old_values" gorm:"type:text"`
-    NewValues       string              `json:"new_vaalues" gorm:"type:text"`
+    NewValues       string              `json:"new_values" gorm:"type:text"`
     Url             string              `json:"url" gorm:"type:text"`
     IpAddress       string              `json:"ip_address" gorm:"type:varchar(45)"`
     UserAgent       string              `json:"user_agent" gorm:"type:varchar(1024)"`

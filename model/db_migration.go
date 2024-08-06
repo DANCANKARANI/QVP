@@ -24,5 +24,7 @@ func Migration() {
 		&TeamInvitation{},
 		&QuoteDetail{},
 		&Audit{},
+		&TeamUser{},
+		&PrescriptionDetail{},
 	)
 }

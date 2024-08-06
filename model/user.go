@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -17,7 +16,7 @@ type ResponseUser struct{
 	FullName string 	`json:"full_name"`
 	PhoneNumber string 	`json:"phone_number"`
 	Email string 		`json:"email"`
-	ImageID uuid.UUID   `json:"image_id"`
+	ImageID uuid.UUID   `json:"image_id,omitempty"`
 }
 
 func GetOneUSer(c *fiber.Ctx)(*ResponseUser,error){
@@ -89,4 +88,15 @@ func UpdateUserInsurance(id,user_id,insurance_id uuid.UUID) (*InsuranceUser,erro
 		return nil,errors.New("failed to update insurance users")
 	}
 	return &insuranceUser,nil
+}
+
+//
+func MapUserToResponse(user User) ResponseUser {
+    return ResponseUser{
+        ID:          user.ID,
+        FullName:    user.FullName,
+        PhoneNumber: user.PhoneNumber,
+        Email:       user.Email,
+        ImageID:     *user.ImageID, // Ensure this is populated correctly
+    }
 }

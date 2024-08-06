@@ -23,6 +23,9 @@ type ResponsePrescription struct {
 	SubTotal  	float64		`json:"sub_total"`
 	VAT			float64		`json:"vat"`
 	Total 		float64		`json:"total"`
+	PrescriptionPath string 	`json:"prescription_path"`
+	ClaimPath	string		`json:"claim_path"`
+	OtherFormPath string	`json:"other_form_path"`
 }
 func AddPrescription(c *fiber.Ctx,user_id uuid.UUID) (*ResponsePrescription, error) {
 	db.AutoMigrate(&Prescription{})
