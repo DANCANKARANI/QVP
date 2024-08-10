@@ -54,14 +54,17 @@ func UpdateTeamInvitationHandler(c *fiber.Ctx)error{
 	return utilities.ShowSuccess(c,"successfully updated team invitation",fiber.StatusOK,teamInvitation)
 }
 
-//delete team invitation handler
+/*
+delete team invitation handler
+
+*/
 func DeleteTeamInvitationHandler(c *fiber.Ctx)error{
 	id,err:=uuid.Parse(c.Params("id"))
 	if err != nil{
 		log.Println(err.Error())
 		return utilities.ShowError(c,"failed delete team invitation",fiber.StatusNotFound)
 	}
-	if err :=model.DeleteInvitationTeam(id); err != nil{
+	if err :=model.DeleteInvitationTeam(c,id); err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}	
 	return utilities.ShowMessage(c,"successfully deleted team invitation",fiber.StatusOK)

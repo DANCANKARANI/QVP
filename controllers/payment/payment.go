@@ -51,7 +51,7 @@ func UpdatePaymentHandler(c *fiber.Ctx)error{
 
 //deletes a row of a payment
 func DeletePaymentHandler(c *fiber.Ctx)error{
-	payment_id := c.Params("id")
+	payment_id,_ := uuid.Parse(c.Params("id"))
 	err:=model.DeletePayment(c,payment_id)
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)

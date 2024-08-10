@@ -93,3 +93,14 @@ func GetAuthUserID(c *fiber.Ctx)(uuid.UUID,error){
 	user_id=*id
 	return user_id.(uuid.UUID),nil
 }
+func GetAuthUser(c *fiber.Ctx)(string){
+	user:= c.Locals("role")
+	if user == nil{
+		log.Println("empty role")
+	}
+	role, true := user.(string)
+	if !true{
+		log.Println("failed to convert",user)
+	}
+	return role
+}

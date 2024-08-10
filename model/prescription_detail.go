@@ -7,7 +7,6 @@ import (
 	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 ) 
 type PaginatedPrescriptionDetails struct {
 	Page 				int		`json:"page"`
@@ -20,6 +19,8 @@ type PaginatedPrescriptionDetails struct {
 
 // AddPrescriptionDetail adds a new prescription detail
 func AddPrescriptionDetail(c *fiber.Ctx, prescriptionID uuid.UUID) (*PrescriptionDetail, error) {
+	user_id, _ := GetAuthUserID(c)
+	role := GetAuthUser(c)
 	prescriptionDetail := new(PrescriptionDetail)
 
 	prescriptionDetail.PrescriptionPath, _ = utilities.GenerateUrl(c, "prescription")
@@ -36,11 +37,23 @@ func AddPrescriptionDetail(c *fiber.Ctx, prescriptionID uuid.UUID) (*Prescriptio
 		return nil, errors.New("failed to add prescription detail")
 	}
 
+	newValues := prescriptionDetail
+
+	//update audit logs
+	if err := utilities.LogAudit("Create",user_id,role,"Prescription Detail",prescriptionDetail.ID,nil,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+
+	//response
 	return prescriptionDetail, nil
 }
 
 // UpdatePrescriptionDetails updates prescription details
 func UpdatePrescriptionDetails(c *fiber.Ctx, prescriptionDetailID, prescriptionID uuid.UUID) (*PrescriptionDetail, error) {
+	user_id, _ := GetAuthUserID(c)
+
+	role := GetAuthUser(c)
+
 	prescriptionDetail := new(PrescriptionDetail)
 
 	
@@ -52,15 +65,26 @@ func UpdatePrescriptionDetails(c *fiber.Ctx, prescriptionDetailID, prescriptionI
 	
 	prescriptionDetail.PrescriptionID = prescriptionID
 
+	//find prescription detail
+	err := db.First(&prescriptionDetail,"id = ?",prescriptionDetailID).Error
+	if err != nil{
+		log.Println("error updating prescription details",err.Error())
+		return nil, errors.New("failed to update prescription detail")
+	}
+
+	oldValues := prescriptionDetail
+
 	// Update the prescription detail
-	if err := db.Model(&PrescriptionDetail{}).Where("id = ?", prescriptionDetailID).
-		Updates(prescriptionDetail).Scan(prescriptionDetail).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Println("Record not found:", err)
-			return nil, errors.New("record not found")
-		}
+	if err := db.Model(&prescriptionDetail).Updates(prescriptionDetail).Error; err != nil {
 		log.Println("Error updating prescription detail:", err)
 		return nil, errors.New("failed to update prescription detail")
+	}
+	
+	newValues := prescriptionDetail
+
+	//update audit log
+	if err := utilities.LogAudit("Update",user_id,role,"Prescription Detail",prescriptionDetailID,oldValues,newValues,c); err != nil{
+		log.Println(err.Error())
 	}
 
 	return prescriptionDetail, nil
@@ -69,13 +93,32 @@ func UpdatePrescriptionDetails(c *fiber.Ctx, prescriptionDetailID, prescriptionI
 deletes prescription detail
 @params id
 */
-func DeletePrescriptionDetail(id uuid.UUID)(error){
+func DeletePrescriptionDetail(c *fiber.Ctx,id uuid.UUID)(error){
+	user_id, _:= GetAuthUserID(c)
+
+	role := GetAuthUser(c)
+
 	prescriptionDetail :=new(PrescriptionDetail)
-	err := db.First(prescriptionDetail,"id = ?",id).Delete(&prescriptionDetail).Error
+
+	//find record
+	err := db.First(prescriptionDetail,"id = ?",id).Error
 	if err != nil{
+		log.Println("error deleting prescription details", err.Error())
+		return errors.New("failed to delete prescription details")
+	}
+	oldValues := prescriptionDetail
+
+	//delete record
+	if err:= db.Delete(&prescriptionDetail).Error; err != nil{
 		log.Println(err.Error())
 		return errors.New("failed to delete prescription details")
 	}
+
+	//update audit log
+	if err := utilities.LogAudit("Delete",user_id,role,"Prescription Detail",id,oldValues,nil,c); err != nil{
+		log.Println(err.Error())
+	}
+
 	return nil
 }
 //Get paginated prescription details

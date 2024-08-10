@@ -59,11 +59,20 @@ func CreateUserAccount(c *fiber.Ctx) error {
 	userModel := model.User{ID: id,FullName: user.FullName,Email: user.Email,PhoneNumber: user.PhoneNumber,CountryCode: country_code,Password: hashed_password,ResetCode: "",}
 	//create user
 	userModel.CodeExpirationTime=time.Now()
+
+	//create user model
 	err = db.Create(&userModel).Error
 	if err!= nil {
 		log.Fatal(err.Error())
 		return utilities.ShowError(c, "failed to add data to the database",fiber.StatusInternalServerError)
 	}
+	newValues := userModel
+
+	//update audit logs
+	if err := utilities.LogAudit("Register",id,"normal","User",id,nil,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+
 	return utilities.ShowMessage(c,"account created successfully",fiber.StatusOK)
 }
 

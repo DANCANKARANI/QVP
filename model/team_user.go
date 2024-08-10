@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 
+	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -14,6 +15,8 @@ adds user to a team
 @params user_id, team_id
 */
 func AddUserToTeam(c *fiber.Ctx, team_id, user_id uuid.UUID) (*TeamUser, error) {
+	//get user role
+	role := GetAuthUser(c)
 	teamUser := TeamUser{}
 	if err :=c.BodyParser(&teamUser); err != nil{
 		log.Println("error parsing json data:",err.Error())
@@ -27,6 +30,12 @@ func AddUserToTeam(c *fiber.Ctx, team_id, user_id uuid.UUID) (*TeamUser, error) 
 		log.Println("database error:",err.Error())
 		return nil, errors.New("failed to add user to a team")
 	}
+	newValues := teamUser
+
+	//update log audit
+	if err := utilities.LogAudit("Create",user_id,role,"Team",user_id,nil,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
 	return &teamUser, nil
 }
 
@@ -34,9 +43,10 @@ func AddUserToTeam(c *fiber.Ctx, team_id, user_id uuid.UUID) (*TeamUser, error) 
 remove user in a team
 @params team_id, user_id
 */
-func RemoveUserFromTeam(team_id,user_id uuid.UUID)(code int,err error){
+func RemoveUserFromTeam(c *fiber.Ctx,team_id,user_id uuid.UUID)(code int,err error){
+	role := GetAuthUser(c)
 	teamUser := new(TeamUser)
-	err =db.Where("user_id = ? AND team_id =?",user_id,team_id).First(teamUser).Error
+	err =db.Where("user_id = ? AND team_id =?",user_id,team_id).First(teamUser).Scan(teamUser).Error
 	if err != nil{
 		if errors.Is(err, gorm.ErrRecordNotFound){
 			log.Println("record not found")
@@ -45,6 +55,20 @@ func RemoveUserFromTeam(team_id,user_id uuid.UUID)(code int,err error){
 		log.Println("database error:",err.Error())
 		return fiber.StatusInternalServerError, errors.New("failed to remove user from team")
 	}
+	//delete team user
+	oldValues := teamUser
+	err = db.Model(&teamUser).Delete(&teamUser).Error
+	if err != nil{
+		log.Println(err.Error())
+		return fiber.StatusInternalServerError, errors.New("failed to remove user from team")
+	}
+	
+	//update log audit
+	if err := utilities.LogAudit("Create",user_id,role,"Team user",user_id,oldValues,nil,c); err != nil{
+		log.Println(err.Error())
+	}
+
+	//return
 	return fiber.StatusOK, nil
 }
 
@@ -92,12 +116,14 @@ update users in a team
 @params team_id, user_id
 */
 func UpdateUsersInTeam(c *fiber.Ctx,user_id,team_id uuid.UUID)(*TeamUser,error){
+	role := GetAuthUser(c)
 	teamUser := new(TeamUser)
 	if err:= c.BodyParser(&teamUser); err != nil{
 		log.Println(err.Error())
 		return nil, errors.New("failed to parse json data")
 	}
-	err := db.Where("user_id = ? AND team_id =?",user_id, team_id).First(&teamUser).Updates(&teamUser).Scan(teamUser).Error
+	//get old values
+	err := db.Where("user_id = ? AND team_id =?",user_id, team_id).First(&teamUser).Error
 	if err != nil{
 		if errors.Is(err, gorm.ErrRecordNotFound){
 			log.Println(err.Error())
@@ -106,5 +132,19 @@ func UpdateUsersInTeam(c *fiber.Ctx,user_id,team_id uuid.UUID)(*TeamUser,error){
 		log.Println(err.Error())
 		return nil, errors.New("failed to update user in a team")
 	}
+	oldValues := teamUser
+
+	//update
+	if err:=db.Where("user_id = ? AND team_id =?",user_id, team_id).Model(&teamUser).Updates(&teamUser).Scan(teamUser).Error; err != nil{
+		log.Println("error updating users in a team"+err.Error())
+		return nil, errors.New("failed to update user in team")
+	}
+	newValues := teamUser
+	
+		//update log audit
+	if err := utilities.LogAudit("Update",user_id,role,"Team user",user_id,oldValues,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+	//response 
 	return teamUser, nil
 }

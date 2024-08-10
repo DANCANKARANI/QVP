@@ -21,7 +21,7 @@ func AddUserToTeamHandler(c *fiber.Ctx)error{
 func RemoveUserFromTeamHandler(c *fiber.Ctx)error{
 	user_id,_:=uuid.Parse(c.Params("id"))
 	team_id,_:=uuid.Parse(c.Params("id"))
-	code, err := model.RemoveUserFromTeam(user_id,team_id)
+	code, err := model.RemoveUserFromTeam(c,user_id,team_id)
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),code)
 	}

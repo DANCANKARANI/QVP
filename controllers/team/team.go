@@ -35,8 +35,8 @@ func UpdateTeamHandler(c *fiber.Ctx)error{
 
 //delete team handler
 func DeleteTeamHandler(c *fiber.Ctx)error{
-	team_id,_:=uuid.Parse("id")
-	err:=model.DeleteTeam(team_id)
+	team_id,_:=uuid.Parse(c.Params("id"))
+	err:=model.DeleteTeam(c,team_id)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}

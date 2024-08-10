@@ -13,11 +13,11 @@ func SetTeamRoutes(app *fiber.App) {
 	teamGroup.Post("/",team.CreateTeamHandler)
 	teamGroup.Patch("/:id",team.UpdateTeamHandler)
 	teamGroup.Get("/",team.GetTeamsHandler)
-	teamGroup.Delete("/",team.DeleteTeamHandler)
+	teamGroup.Delete("/:id",team.DeleteTeamHandler)
 
 	//team users
 	teamGroup.Post("/:team_id/users/:user_id",team_user.AddUserToTeamHandler)
 	teamGroup.Get("/:team_id/users",team_user.GetUsersFromTeamHandler)
 	teamGroup.Delete("/:team_id/users/:user_id",team_user.RemoveUserFromTeamHandler)
-	teamGroup.Patch("/:team_id/users/user_id",team_user.UpdateUserInTeamHandler)
+	teamGroup.Patch("/:team_id/users/:user_id",team_user.UpdateUserInTeamHandler)
 }

@@ -1,13 +1,12 @@
 package user
 
 import (
-	"fmt"
+	"log"
 	"time"
-
-	"github.com/gofiber/fiber/v2"
 	"github.com/DANCANKARANI/QVP/middleware"
 	"github.com/DANCANKARANI/QVP/model"
 	"github.com/DANCANKARANI/QVP/utilities"
+	"github.com/gofiber/fiber/v2"
 )
 type ResponseUser struct{
 	FullName string 	`json:"full_name"`
@@ -38,7 +37,7 @@ func Login(c *fiber.Ctx)error{
 	}
 	exp :=time.Hour*24
 	//generating token
-	tokenString,err := middleware.GenerateToken(middleware.Claims{UserID: &existingUser.ID,Role: "user"},exp)
+	tokenString,err := middleware.GenerateToken(middleware.Claims{UserID: &existingUser.ID,Role: "normal"},exp)
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
@@ -54,20 +53,37 @@ func Login(c *fiber.Ctx)error{
 	response_user:=loginResponse{
 		Token: tokenString,
 	}
+
+	//update audit logs
+	if err := utilities.LogAudit("Login",existingUser.ID,"normal","User",existingUser.ID,existingUser,existingUser,c); err != nil{
+		log.Println(err.Error())
+	}
+
 	return utilities.ShowSuccess(c,"successfully logged in",fiber.StatusOK,response_user)	
 }
 
 func Logout(c *fiber.Ctx) error {
+	user_id, _ := model.GetAuthUserID(c)
+	role :=model.GetAuthUser(c)
 	tokenString,err :=utilities.GetJWTToken(c)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusUnauthorized)
 	}
-	fmt.Println(tokenString)
+	oldValues := tokenString
+
+	//invalidate token
 	err = middleware.InvalidateToken(tokenString)
 	if err != nil {
 		return utilities.ShowError(c,"failed to invalidate the token",fiber.StatusInternalServerError)
 	}
-	
+	newValues := tokenString
+
+	//update audit logs
+	if err := utilities.LogAudit("Logout",user_id,role,"User",user_id,oldValues,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+
+	//response
 	return utilities.ShowMessage(c,"successfully logged out",fiber.StatusOK)
 }
 

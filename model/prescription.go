@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -28,6 +29,7 @@ type ResponsePrescription struct {
 	OtherFormPath string	`json:"other_form_path"`
 }
 func AddPrescription(c *fiber.Ctx,user_id uuid.UUID) (*ResponsePrescription, error) {
+	role := GetAuthUser(c)
 	db.AutoMigrate(&Prescription{})
 	body := Prescription{}
 	if err:=c.BodyParser(&body);err != nil {
@@ -55,6 +57,10 @@ func AddPrescription(c *fiber.Ctx,user_id uuid.UUID) (*ResponsePrescription, err
 		VAT: body.VAT,
 		Total: body.Total,
 	}
+	//update audit log
+	if err := utilities.LogAudit("Create",user_id,role,"Prescription",body.ID,nil,responsePrescrption,c); err != nil{
+		log.Println(err.Error())
+	}
 	return responsePrescrption,nil
 }
 /*
@@ -78,6 +84,7 @@ updates the prescription
 @params user_id
 */
 func UpdatePrescription(c *fiber.Ctx,id,user_id uuid.UUID)(*ResponsePrescription,error){
+	role := GetAuthUser(c)
 	body := Prescription{}
 	prescription := Prescription{
 		SubTotal:body.SubTotal,
@@ -92,10 +99,25 @@ func UpdatePrescription(c *fiber.Ctx,id,user_id uuid.UUID)(*ResponsePrescription
 	body.Total=prescription.Total
 	body.UserApprovedBy=user_id
 	response := new(ResponsePrescription)
-	err := db.First(&Prescription{},"id = ?",id).Updates(&body).Scan(&response).Error
+
+	//find the prescription to be updated
+	err := db.First(&prescription,"id = ?",id).Error
 	if err != nil {
-		log.Println(err.Error())
+		log.Println("error updating prescription",err.Error())
 		return nil,errors.New("failed to update prescription")
+	}
+	oldValues := prescription
+	//update prescription
+	err = db.Model(&prescription).Updates(&body).Scan(&response).Error
+	if err != nil{
+		log.Println("error updating prescription",err.Error() )
+		return nil, errors.New("failed to update prescription")
+	}
+	newValues := prescription
+	//update audit log
+	//update audit log
+	if err := utilities.LogAudit("Update",user_id,role,"Prescription",id,oldValues,newValues,c); err != nil{
+		log.Println(err.Error())
 	}
 	return response,nil
 }
@@ -105,6 +127,8 @@ Deletes the prescription
 @params id
 */
 func DeletePrescription(c *fiber.Ctx, id uuid.UUID) error {
+	user_id, _:= GetAuthUserID(c)
+	role := GetAuthUser(c)
     prescription := Prescription{}
     
     // Check if the prescription exists
@@ -117,13 +141,17 @@ func DeletePrescription(c *fiber.Ctx, id uuid.UUID) error {
         log.Printf("Error finding prescription with ID %s: %v", id, err)
         return errors.New("failed to find prescription")
     }
-    
+    oldValues := prescription
     // Attempt to delete the prescription
     err = db.Delete(&prescription).Error
     if err != nil {
         log.Printf("Error deleting prescription with ID %s: %v", id, err)
         return fiber.NewError(fiber.StatusInternalServerError, "Failed to delete prescription")
     }
+	//update audit logs
+	if err := utilities.LogAudit("Delete",user_id,role,"Prescription",id,oldValues,nil,c); err != nil{
+		log.Println(err.Error())
+	}
     return nil
 }
 

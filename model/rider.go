@@ -45,3 +45,54 @@ func GetRider(id uuid.UUID)(*Rider,error){
 	}
 	return &rider,nil
 }
+/*
+updates rider
+@params rider_id
+*/
+func UpdateRider(c *fiber.Ctx, rider_id uuid.UUID, body Rider)(*Rider,error){
+	user_id, _:=GetAuthUserID(c)
+	role := GetAuthUser(c)
+
+	oldValues := body
+	//find rider
+	err := db.First(oldValues,"id = ?",rider_id).Error
+	if err != nil{
+		log.Println(err.Error())
+		return nil, errors.New("failed to update rider")
+	}
+	//update rider
+	newValues := new(Rider)
+	err = db.Model(&oldValues).Where("id = ?",rider_id).Scan(&newValues).Error
+	if err != nil{
+		log.Println(err.Error())
+		return nil, errors.New("failed to update rider")
+	}
+
+	//update audit logs
+	if err := utilities.LogAudit("Update",user_id,role,"Rider",rider_id,nil,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+	return newValues,nil
+}
+
+/*
+deletes rider
+@params rider_id
+*/
+func DeleteRider(c *fiber.Ctx, rider_id uuid.UUID)(error){
+	user_id, _ :=GetAuthUserID(c)
+	role := GetAuthUser(c)
+
+	oldValues := new(Rider)
+	err := db.First(&oldValues,"id = ?",rider_id).Delete(&oldValues).Error
+	if err != nil {
+		log.Println(err.Error())
+		return  errors.New("failed to delete rider")
+	}
+	//update log audit
+	if err := utilities.LogAudit("Delete",user_id,role,"Rider",rider_id,oldValues,nil,c); err != nil{
+		log.Println(err.Error())
+	}
+	//response
+	return nil
+}

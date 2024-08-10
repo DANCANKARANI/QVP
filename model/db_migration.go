@@ -26,5 +26,6 @@ func Migration() {
 		&Audit{},
 		&TeamUser{},
 		&PrescriptionDetail{},
+		&Comment{},
 	)
 }

@@ -51,7 +51,8 @@ func GetAllInsuranceHandler(c *fiber.Ctx)error{
 }
 
 func DeleteInsuranceHandler(c *fiber.Ctx)error{
-	id := c.Params("id")
+	id,_ := uuid.Parse(c.Params("id"))
+	
 	err := model.DeleteInsurance(c,id)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)

@@ -9,9 +9,9 @@ import (
 
 //connecting to RedisClient
 func RedisClient()*redis.Client{
-    redisHost := "brewdctf7h5b6avp6dnm-redis.services.clever-cloud.com"
-    redisPort := "3630"
-    redisPassword := "6VIqwXR5je4NdGqCMJq"
+    redisHost := "bc6y7demho3dt7k3reod-redis.services.clever-cloud.com"
+    redisPort := "3672"
+    redisPassword := "LjFuM0G0buDXvkxhz1W"
 
     // Construct the Redis client options
     rdb := redis.NewClient(&redis.Options{
@@ -24,7 +24,7 @@ func RedisClient()*redis.Client{
     ctx := context.Background()
     _, err := rdb.Ping(ctx).Result()
     if err != nil {
-        log.Fatalf("Failed to connect to Redis: %v", err)
+        log.Printf("Failed to connect to Redis: %v", err)
     }
 	return rdb
 }

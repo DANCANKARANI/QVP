@@ -2,12 +2,12 @@ package permission
 
 import (
 	"log"
-
 	"github.com/DANCANKARANI/QVP/model"
 	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
+
 //add permission handler
 func AddPermissionHandler(c *fiber.Ctx)error{
 	if err:= model.CreatePermission(c); err != nil{

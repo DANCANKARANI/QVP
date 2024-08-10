@@ -29,7 +29,9 @@ func UpdateInsuranceUserHandler(c *fiber.Ctx)error{
 //deletes insurance user
 func DeleteInsuranceUserHandler(c *fiber.Ctx)error{
 	id,_ := uuid.Parse(c.Params("id"))
-	err := model.DeleteInsuranceUser(id)
+
+	err := model.DeleteInsuranceUser(c,id)
+	
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}

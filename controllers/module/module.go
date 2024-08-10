@@ -36,7 +36,7 @@ func UpdateModuleHandler(c *fiber.Ctx)error{
 //delete module handler
 func DeleteModuleHandler(c *fiber.Ctx)error{
 	module_id,_:=uuid.Parse(c.Params("id"))
-	if err := model.DeleteModule(module_id); err != nil{
+	if err := model.DeleteModule(c,module_id); err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
 	return utilities.ShowMessage(c,"module deleted successfully",fiber.StatusOK)

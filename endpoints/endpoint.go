@@ -2,6 +2,7 @@ package endpoints
 
 import (
 	//"github.com/DANCANKARANI/QVP/routes/audits"
+	"github.com/DANCANKARANI/QVP/routes/comments"
 	"github.com/DANCANKARANI/QVP/routes/dependants"
 	"github.com/DANCANKARANI/QVP/routes/images"
 	"github.com/DANCANKARANI/QVP/routes/insurance"
@@ -15,6 +16,7 @@ import (
 	"github.com/DANCANKARANI/QVP/routes/quote_details"
 	"github.com/DANCANKARANI/QVP/routes/riders"
 	"github.com/DANCANKARANI/QVP/routes/roles"
+	"github.com/DANCANKARANI/QVP/routes/smss"
 	"github.com/DANCANKARANI/QVP/routes/team_invitations"
 	"github.com/DANCANKARANI/QVP/routes/teams"
 	"github.com/DANCANKARANI/QVP/routes/users"
@@ -46,6 +48,8 @@ func CreateEndpoint(){
 	team_invitations.SetTeamInvitationRoutes(app)
 	insurance_users.SetInsuranceUserRoutes(app)
 	quote_details.SetQuoteDetailsRoutes(app)
+	comments.SetCommentRoutes(app)
+	smss.SetSmsRoutes(app)
 	
 	//audits.SetAuditsRoutes(app)
 	//port

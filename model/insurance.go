@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 
+	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -15,33 +16,72 @@ type ResInsurance struct{
 }
 //adds insurance
 func AddInsurace(c *fiber.Ctx)error{
+	user_id,_:=GetAuthUserID(c)
+
+	role := GetAuthUser(c)
+
 	ID := uuid.New()
+
 	body := Insurance{}
+	//get request body
 	if err := c.BodyParser(&body); err != nil{
-		return errors.New("failed to parse the Json data")
+		log.Println("failed to parse request insurance body",err.Error())
+		return errors.New("failed to parse request body")
 	}
+
 	body.ID=ID
+
+	//create insurance
 	err := db.Create(&body).Error
 	if err != nil{
 		return errors.New("failed to add insurance:"+err.Error())
 	}
+	newValues := body
+
+	 //update audit logs
+	 if err := utilities.LogAudit("Create",user_id,role,"Insurance",ID,nil,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+    
 	return nil
 }
 //updates insurance
 func UpdateInsurance(c *fiber.Ctx,insurance_id uuid.UUID)(*Insurance,error){
+	user_id, _:= GetAuthUserID(c)
+
+	role := GetAuthUser(c)
+
 	body := Insurance{}
+
+	insurance := new(Insurance)
+	
+	//get request body
 	if err := c.BodyParser(&body); err != nil{
 		return nil,errors.New("failed to parse json data:"+err.Error())
 	}
-	err := db.Model(&Insurance{}).Where("id = ?",insurance_id).Updates(&body).Error
-	if err != nil {
-		return nil,errors.New("failed to update insurance:"+err.Error())
+
+	//find insurance record
+	if err := db.First(&insurance,"id =?",insurance_id).Error; err !=nil{
+		log.Println("error getting insurance record for update", err.Error())
+		return nil, errors.New("failed to update insurance")
 	}
-	err = db.First(&Insurance{},"id = ?",insurance_id).Scan(&body).Error
-	if err != nil {
-		return nil,errors.New("failed to get updated row:"+err.Error())
+
+	oldValues := insurance
+
+	//update insurance model
+	if err:=db.Model(&insurance).Updates(&body).Error; err != nil{
+		log.Println("error updating insurance",err.Error())
+		return nil, errors.New("failed to update insurance")
 	}
-	return &body,nil
+
+	newValues := insurance
+
+	 //update audit logs
+	 if err := utilities.LogAudit("Update",user_id,role,"Insurance",insurance_id,oldValues,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+
+	return newValues,nil
 }
 /*
 gets insurance by id
@@ -74,12 +114,29 @@ func GetAllInsurances(c *fiber.Ctx)(*[]Insurance,error){
 	return &response,nil
 }
 
-func DeleteInsurance(c *fiber.Ctx,id string)error{
-	insurance := Insurance{}
-	err := db.First(&Insurance{},"id = ?",id).Delete(&insurance).Error
+func DeleteInsurance(c *fiber.Ctx,insurance_id uuid.UUID)error{
+	user_id, _ := GetAuthUserID(c)
+
+	role := GetAuthUser(c)
+
+	insurance := new(Insurance)
+
+	if err := db.First(&insurance,"id = ?",insurance_id).Error; err != nil{
+		log.Println("error finding insurance for delition",err.Error())
+		return errors. New("failed to delete insurance")
+	}
+	oldValues := insurance
+
+	err := db.Delete(&insurance).Error
 	if err != nil{
 		log.Println(err.Error())
 		return errors.New("error deleting insurance")
 	}
+
+	 //update audit logs
+	 if err := utilities.LogAudit("Delete",user_id,role,"Insurance",insurance_id,oldValues,nil,c); err != nil{
+		log.Println(err.Error())
+	}
+	
 	return nil
 }

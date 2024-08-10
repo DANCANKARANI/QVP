@@ -7,6 +7,5 @@ import (
 func main() {
 	model.Migration()
 	model.InitFirebase()
-	model.RegisterHooks()
 	endpoints.CreateEndpoint()
 }

@@ -17,6 +17,8 @@ type ResponseTeamInvitation struct{
 }
 //creates new team invitations
 func CreateTeamInvitation(c *fiber.Ctx) (*ResponseTeamInvitation,error){
+	user_id, _ := GetAuthUserID(c)
+	role :=GetAuthUser(c)
 	teamInvitation := TeamInvitation{}
 	response := new(ResponseTeamInvitation)
 	if err := c.BodyParser(&teamInvitation); err != nil {
@@ -35,6 +37,11 @@ func CreateTeamInvitation(c *fiber.Ctx) (*ResponseTeamInvitation,error){
 	if err != nil {
 		log.Println(err.Error())
 		return nil,errors.New("failed to add team invitations")
+	}
+	//update audit logs
+	newValues := teamInvitation
+	if err := utilities.LogAudit("Create",user_id,role,"Team invitation",user_id,nil,newValues,c); err != nil{
+		log.Println(err.Error())
 	}
 	return response,nil
 }
@@ -77,6 +84,8 @@ updates teamInvitations
 @params team_invitation_id
 */
 func UpdateTeamInvitation(c *fiber.Ctx, id uuid.UUID)(*ResponseTeamInvitation, error) {
+	role := GetAuthUser(c)
+	user_id, _ :=GetAuthUserID(c)
 	teamInvitation := new(TeamInvitation)
 	response := new(ResponseTeamInvitation)
 	if err := c.BodyParser(&teamInvitation);err != nil{
@@ -84,12 +93,24 @@ func UpdateTeamInvitation(c *fiber.Ctx, id uuid.UUID)(*ResponseTeamInvitation, e
 		return nil, errors.New("failed to parse json data")
 	}
 	//check existence
-	err := db.Model(&teamInvitation).Where("id = ?",id).Updates(&teamInvitation).Scan(&response).Error
+	err := db.First(&teamInvitation,"id= ?",id).Scan(&teamInvitation).Error
+	if err != nil{
+		log.Println(err.Error())
+		return nil,errors.New("record not found")
+	}
+	oldValues :=teamInvitation
+	//update the invatitation teams
+	err = db.Model(&teamInvitation).Where("id = ?",id).Updates(&teamInvitation).Scan(&response).Error
 	if err !=nil{
 		log.Println(err.Error())
 		return nil,errors.New("failed to find team invitation")
 	}
-	//update the invatitation teams
+	//update audit log
+	newValues := teamInvitation
+	if err := utilities.LogAudit("Create",user_id,role,"Team invitation",user_id,oldValues,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+	
 	return response,nil
 }
 
@@ -97,17 +118,29 @@ func UpdateTeamInvitation(c *fiber.Ctx, id uuid.UUID)(*ResponseTeamInvitation, e
 deletes the invitation team
 @params invitation_team_id
 */
-func DeleteInvitationTeam(id uuid.UUID)(error){
+func DeleteInvitationTeam(c *fiber.Ctx,id uuid.UUID)(error){
+	role := GetAuthUser(c)
+	user_id,_:=GetAuthUserID(c)
 	teamInvitation :=new(TeamInvitation)
-	err :=db.First(&teamInvitation, "id = ?", id).Error
+
+	//find the team invitation
+	err :=db.First(&teamInvitation, "id = ?", id).Scan(&teamInvitation).Error
 	if err != nil {
 		log.Println(err.Error())
 		return errors.New("failed to delete")
 	}
+
+	oldValues := teamInvitation
+	//delete team invitations
 	err = db.Model(&teamInvitation).Delete(&teamInvitation).Error
 	if err != nil {
 		log.Println(err.Error())
 		return errors.New("failed to delete")
+	}
+
+	//update audit logs
+	if err := utilities.LogAudit("Delete",user_id,role,"Team invitation",user_id,oldValues,nil,c); err != nil{
+		log.Println(err.Error())
 	}
 	return nil
 }

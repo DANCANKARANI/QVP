@@ -25,7 +25,7 @@ func AddPaymentMethod(c *fiber.Ctx) error {
 
 //update payment handler
 func UpdatePaymentMethod(c *fiber.Ctx)error{
-	payment_method_id := c.Params("id")
+	payment_method_id, _ := uuid.Parse(c.Params("id"))
 	payment_method,err := model.UpdtatePaymentMethod(c,payment_method_id)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(), fiber.StatusInternalServerError)
@@ -35,7 +35,8 @@ func UpdatePaymentMethod(c *fiber.Ctx)error{
 
 //deleting the payment method
 func RemovePaymentMethod(c *fiber.Ctx)error{
-	payment_method_id := c.Params("id")
+	payment_method_id,_ := uuid.Parse(c.Params("id"))
+	
 	err :=model.DeletePaymentMethod(c,payment_method_id)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)

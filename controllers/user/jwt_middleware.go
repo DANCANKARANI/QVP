@@ -38,5 +38,6 @@ func JWTMiddleware(c *fiber.Ctx) error {
     c.Locals("ip_address", ip)
     // Store the userID in context
     c.Locals("user_id", claims.UserID)
+    c.Locals("role",claims.Role)
     return c.Next()
 }

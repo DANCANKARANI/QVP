@@ -312,7 +312,6 @@ type Audit struct{
     CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
     UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
     DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
-    User            User                `json:"user"`
 }
 
 //failed jobs db model
@@ -324,4 +323,27 @@ type FailedJob struct{
     Payload         string              `json:"payload" gorm:"type:longtext"`
     Exception       string              `json:"exception" gorm:"type:longtext"`
     FailedAt        time.Time           `json:"failed_at" gorm:"type:timestamp"`
+}
+//comments db model
+type Comment struct{
+    ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
+    Comment         string              `json:"comment" gorm:"type:varchar(255)"`
+    CommentableType string              `json:"commentable_type" gorm:"type:varchar(255)"`
+    CommentableID   uuid.UUID           `json:"commentable_id" gorm:"type:varchar(36)"`
+    CommenterType   string              `json:"commenter_type" gorm:"type:varchar(255)"`
+    CommenterID     uuid.UUID           `json:"commenter_id" gorm:"type:varchar(255)"`
+    CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
+}
+//sms db model
+type Sms struct{
+    ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
+    Phone           string              `json:"phone" gorm:"type:varchar(255)"`
+    Text            string              `json:"text" gorm:"type:text"`
+    LinkID          string              `json:"link_id" gorm:"type:varchar(255)"`
+    Response        string              `json:"response"`
+    CallbackStatus  string              `json:"callback_status" gorm:"type:varchar(255)"`
+    CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
 }

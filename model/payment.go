@@ -4,9 +4,9 @@ import (
 	"errors"
 	"log"
 
+	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 type ResponsePayment struct {
 	ID uuid.UUID `json:"id"`
@@ -20,6 +20,7 @@ type ResponsePayment struct {
 	PaymentMethod PaymentMethod
 }
 func AddPayment(c *fiber.Ctx,user_id,payment_method_id uuid.UUID) error{
+	role := GetAuthUser(c)
 	//generate new uuid
 	id := uuid.New()
 	body := Payment{}
@@ -37,6 +38,14 @@ func AddPayment(c *fiber.Ctx,user_id,payment_method_id uuid.UUID) error{
 		log.Println(err.Error())
 		return errors.New("failed to add payment")
 	}
+
+	newValues := body
+
+	//update audit logs
+	if err := utilities.LogAudit("Create",user_id,role,"Payment",id,nil,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+
 	return nil
 }
 
@@ -125,35 +134,70 @@ func GetAllPayments(c *fiber.Ctx)(*[]ResponsePayment,error){
 updates the payment details
 */
 func UpdatePayment(c *fiber.Ctx)(*ResponsePayment,error){
-	payment_id :=c.Params("id")
-	body := Payment{}
-	response := ResponsePayment{}
+	user_id, _ := GetAuthUserID(c)
+
+	role := GetAuthUser(c)
+
+	payment_id,_ :=uuid.Parse(c.Params("id"))
+
+	body := new (Payment)
+	payment := new(Payment)
+	response := new(ResponsePayment)
+
 	if err := c.BodyParser(&body); err != nil {
 		log.Println(err.Error())
 		return nil,errors.New("failed to parse payment data")
 	}
 	//get and update the payment
+	if err := db.First(&payment,"id = ?",payment_id).Error; err != nil{
+		log.Println("eror updating payment", err.Error())
+		return nil, errors.New("failed to update payment")
+	}
+
+	oldValues := payment
+	
+	//update payment
 	err := db.Preload("User").Preload("PaymentMethod").
-	First(&Payment{},"id = ?",payment_id).Updates(&body).Scan(&response).Error
+	Model(payment).Updates(&body).Scan(&response).Error
 	if err != nil {
 		log.Println(err.Error())
 		return nil,errors.New("failed to update payment")
 	}
-	return &response,nil
+	newValues := payment
+
+	//update log audits
+	if err := utilities.LogAudit("Update",user_id,role,"Payment",payment_id,oldValues,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+
+	return response,nil
 }
 /*
 deletes a specified raw
 @params payment_id
 */
-func DeletePayment(c *fiber.Ctx,payment_id string) error {
+func DeletePayment(c *fiber.Ctx,payment_id uuid.UUID) error {
+	user_id, _ := GetAuthUserID(c)
+
+	role := GetAuthUser(c)
 	// Perform the delete operation
-	err := db.First(&Payment{},"id = ?",payment_id).Delete(&Payment{}).Error
+	payment := new(Payment)
+	err := db.First(&payment,"id = ?",payment_id).Error
 	if err != nil {
-		log.Println(err.Error())
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("Payment record not found")
-		}
+		log.Println("error deleting payment",err.Error())
+		return errors.New("failed to delete payment")
+	}
+	oldValues := payment
+	
+	err =db.Delete(&payment).Error
+	if err != nil {
+		log.Println("error deleting payment",err.Error())
 		return errors.New("failed to delete the record")
+	}
+
+	//update audit logs
+	if err := utilities.LogAudit("Delete",user_id,role,"Payment",payment_id,oldValues,nil,c); err != nil{
+		log.Println(err.Error())
 	}
 	return nil
 }

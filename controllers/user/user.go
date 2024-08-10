@@ -37,7 +37,7 @@ func UpdateUserHandler(c *fiber.Ctx)error{
 func AddUserInsurance(c *fiber.Ctx)error{
 	user_id,_:=model.GetAuthUserID(c)
 	insurance_id,_:=uuid.Parse(c.Params("id"))
-	insuranceUser,err:=model.AddUserInsurance(user_id,insurance_id)
+	insuranceUser,err:=model.AddUserInsurance(c,user_id,insurance_id)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
@@ -51,7 +51,7 @@ func UpdateUserInsurance(c *fiber.Ctx)error{
 	}
 	id,_:=uuid.Parse(c.Params("id"))
 	insurance_id,_:=uuid.Parse(c.Query("insurance_id"))
-	insuranceUser,err:=model.UpdateUserInsurance(id,user_id,insurance_id)
+	insuranceUser,err:=model.UpdateUserInsurance(c,id,user_id,insurance_id)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
