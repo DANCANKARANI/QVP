@@ -2,6 +2,7 @@ package endpoints
 
 import (
 	//"github.com/DANCANKARANI/QVP/routes/audits"
+	"github.com/DANCANKARANI/QVP/routes/admins"
 	"github.com/DANCANKARANI/QVP/routes/comments"
 	"github.com/DANCANKARANI/QVP/routes/dependants"
 	"github.com/DANCANKARANI/QVP/routes/images"
@@ -35,6 +36,7 @@ func CreateEndpoint(){
 	}))
 	dependants.SetDependantRoutes(app)
 	insurancers.SetInsurancersRoutes(app)
+	admins.SetAdminsRoutes(app)
 	users.SetUserRoutes(app)
 	payment_methods.SetPaymentMethodRoutes(app)
 	payments.SetPaymentRoutes(app)
