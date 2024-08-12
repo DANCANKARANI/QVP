@@ -139,8 +139,7 @@ type Prescription struct {
     User             User           `json:"user" gorm:"foreignKey:UserValidatedBy"`
     Admin            Admin          `json:"admin" gorm:"foreignKey:AdminApprovedBy"`
     Rider            Rider          `json:"rider" gorm:"foreignKey:DeliveredBy"`
-    PrescriptionDetail []PrescriptionDetail `gorm:"foreignKey:PrescriptionID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
-    
+    PrescriptionDetail []PrescriptionDetail `gorm:"foreignKey:PrescriptionID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`  
 }
 //prescription detail db model
 type PrescriptionDetail struct{
@@ -165,7 +164,7 @@ type Branch struct {
     Prescriptions []Prescription    `gorm:"foreignKey:BranchID;constraint:OnUpdate:CASCADE;OnDelete:SET NULL;reference:ID"`
 }
 
-
+//admin db model
 type Admin struct {
     ID              uuid.UUID       `json:"id" gorm:"type:varchar(36);primary_key"`
     FullName        string          `json:"full_name" gorm:"type:varchar(255)"`
@@ -183,6 +182,7 @@ type Admin struct {
     Role          []Role            `json:"role" gorm:"many2many:admin_roles"`
 }
 
+//rider db model
 type Rider struct {
     ID          uuid.UUID  `json:"id" gorm:"type:varchar(36);primary_key"`
     FullName    string      `json:"full_name" gorm:"type:varchar(255)"`

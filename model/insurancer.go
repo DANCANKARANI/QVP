@@ -10,18 +10,23 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
-
+type ResInsurancer struct{
+	ID			uuid.UUID 	`json:"id"`
+	FullName	string		`json:"full_name"`
+	Email		string		`json:"email"`
+	PhoneNumber	string		`json:"phone_number"`
+}
 /*
 creates insurancer account
 @params body
 */
-func CreateInsurancerAccount(c *fiber.Ctx,body Insurancer)error{
+func CreateInsurancerAccount(c *fiber.Ctx,body Insurancer)(uuid.UUID,error){
 	Insurancer :=body
 
 	//hash password
 	hashed_password,err := utilities.HashPassword(Insurancer.Password)
 	if err != nil{
-		return errors.New(err.Error())
+		return uuid.Nil,errors.New(err.Error())
 	}
 
 	Insurancer.Password = hashed_password
@@ -29,10 +34,10 @@ func CreateInsurancerAccount(c *fiber.Ctx,body Insurancer)error{
 	//create insurancer
 	if err := db.Create(&Insurancer).Error; err != nil{
 		log.Println("error creating insurancer account:",err.Error())
-		return errors.New("failed to create insurancer account")
+		return uuid.Nil,errors.New("failed to create insurancer account")
 	}
 
-	return nil
+	return Insurancer.ID,nil
 }
 
 /*
@@ -64,7 +69,7 @@ func InsurerExist(c *fiber.Ctx, phoneNumber string) (bool, *Insurancer, error) {
 update Insurancer
 */
 
-func UpdateInsurancer(c *fiber.Ctx, insurancer_id uuid.UUID)(*Insurancer,error){
+func UpdateInsurancer(c *fiber.Ctx, insurancer_id uuid.UUID)(*ResInsurancer,error){
 	insurancer := new(Insurancer)
 	body := Insurancer{}
 
@@ -86,6 +91,10 @@ func UpdateInsurancer(c *fiber.Ctx, insurancer_id uuid.UUID)(*Insurancer,error){
 			return nil, errors.New(err_str)
 		}
 	}
+	if body.Password != ""{
+		hashed_password,_ := utilities.HashPassword(body.Password)
+		insurancer.Password= hashed_password
+	}
 
 	//find old values
 	if err := db.First(insurancer,"id = ?",insurancer_id).Error; err != nil{
@@ -94,8 +103,9 @@ func UpdateInsurancer(c *fiber.Ctx, insurancer_id uuid.UUID)(*Insurancer,error){
 	}
 	oldValues := insurancer
 
+	response := new(ResInsurancer)
 	//update insurancer
-	if err := db.Model(&insurancer).Updates(body).Error; err != nil{
+	if err := db.Model(&insurancer).Updates(body).Scan(&response).Error; err != nil{
 		log.Println("failed to update insurancer:",err.Error())
 		return nil,errors.New("failed to update insurancer")
 	}
@@ -108,7 +118,7 @@ func UpdateInsurancer(c *fiber.Ctx, insurancer_id uuid.UUID)(*Insurancer,error){
 		log.Println(err.Error())
 	}
 
-	return newValues, nil
+	return response, nil
 }
 
 /*
@@ -136,10 +146,11 @@ func DeleteInsurancer(c *fiber.Ctx, insurancer_id uuid.UUID)error{
 }
 
 //get insurancer by id
-func GetInsurancer(c *fiber.Ctx, insurancer_id uuid.UUID)(*Insurancer,error){
+func GetInsurancer(c *fiber.Ctx, insurancer_id uuid.UUID)(*ResInsurancer,error){
 	insurancer := new(Insurancer)
+	response := new(ResInsurancer)
 
-	if err := db.First(insurancer,"id = ?",insurancer_id).Error; err != nil{
+	if err := db.First(insurancer,"id = ?",insurancer_id).Scan(&response).Error; err != nil{
 		if errors.Is(err, gorm.ErrRecordNotFound){
 			log.Println("record not found:",err.Error())
 			return nil, errors.New("record not found")
@@ -148,5 +159,5 @@ func GetInsurancer(c *fiber.Ctx, insurancer_id uuid.UUID)(*Insurancer,error){
 		return nil, errors.New("errors getting insurancer details")
 	}
 
-	return insurancer, nil
+	return response, nil
 }

@@ -36,13 +36,13 @@ func CreateInsurancerAccountHandler(c *fiber.Ctx) error {
 	}
 
 	//create account
-	err = model.CreateInsurancerAccount(c,*insurancer)
+	id,err := model.CreateInsurancerAccount(c,*insurancer)
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInsufficientStorage)
 	}
 
 	//update audit logs
-	if err := utilities.LogAudit("Register",insurancer.ID,"insurancer","Insurancer",insurancer.ID,nil,insurancer,c); err != nil{
+	if err := utilities.LogAudit("Register",id,"insurancer","Insurancer",id,nil,insurancer,c); err != nil{
 		log.Println(err.Error())
 	}
 

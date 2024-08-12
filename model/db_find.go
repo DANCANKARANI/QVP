@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 var db =database.ConnectDB()
+
 /*
 finds user using phone number only
 @params phone_number

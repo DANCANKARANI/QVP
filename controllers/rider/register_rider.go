@@ -42,14 +42,14 @@ func CreateRiderAccount(c *fiber.Ctx)error{
 	rider.Password = hashed_password
 
 	//create account
-	err = model.CreateRiderAccount(c,*rider)
+	id,err := model.CreateRiderAccount(c,*rider)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
 	newValues := rider
 
 	//update audit logs
-	if err := utilities.LogAudit("Delete",rider.ID,"rider","Rider",rider.ID,nil,newValues,c); err != nil{
+	if err := utilities.LogAudit("Delete",id,"rider","Rider",id,nil,newValues,c); err != nil{
 		log.Println(err.Error())
 	}
 

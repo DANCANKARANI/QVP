@@ -8,14 +8,24 @@ import (
 	"github.com/google/uuid"
 )
 var country_code = "KE"
-func CreateRiderAccount(c *fiber.Ctx,body Rider)error {
+
+//response to rider
+type ResRider struct{
+	ID 		uuid.UUID		`json:"id"`
+	FullName	string		`json:"full_name"`
+	StaffMember	string		`json:"staff_member"`
+	PhoneNumber	string		`json:"phone_number"`
+	Email		string		`json:"email"`
+	IdNumber	string		`json:"id_number"`
+}
+func CreateRiderAccount(c *fiber.Ctx,body Rider)(uuid.UUID,error ){
 	id:=uuid.New()
 	body.ID = id
 	if err :=db.Create(&body).Error;err !=nil {
 		log.Println(err.Error())
-		return errors.New("failed to add rider")
+		return uuid.Nil,errors.New("failed to add rider")
 	}
-	return nil;
+	return body.ID,nil
 }
 //validate function
 func IsValidData(email, phone_number string)(bool,error){
@@ -36,24 +46,28 @@ func IsValidData(email, phone_number string)(bool,error){
 gets the rider's details by id
 @params id
 */
-func GetRider(id uuid.UUID)(*Rider,error){
+func GetRider(id uuid.UUID)(*ResRider,error){
 	rider:=Rider{}
-	err:=db.First(&rider,"id = ?",id).Scan(&rider).Error
+	response := new(ResRider)
+	err:=db.First(&rider,"id = ?",id).Scan(response).Error
 	if err != nil{
 		log.Println(err.Error())
 		return nil,errors.New("no record found")
 	}
-	return &rider,nil
+	return response,nil
 }
 /*
 updates rider
 @params rider_id
 */
-func UpdateRider(c *fiber.Ctx, rider_id uuid.UUID, body Rider)(*Rider,error){
+func UpdateRider(c *fiber.Ctx, rider_id uuid.UUID,body Rider)(*ResRider,error){
 	user_id, _:=GetAuthUserID(c)
 	role := GetAuthUser(c)
 
-	oldValues := body
+	//parse request body
+
+	response := ResRider{}
+	oldValues := new(Rider)
 	//find rider
 	err := db.First(oldValues,"id = ?",rider_id).Error
 	if err != nil{
@@ -61,18 +75,18 @@ func UpdateRider(c *fiber.Ctx, rider_id uuid.UUID, body Rider)(*Rider,error){
 		return nil, errors.New("failed to update rider")
 	}
 	//update rider
-	newValues := new(Rider)
-	err = db.Model(&oldValues).Where("id = ?",rider_id).Scan(&newValues).Error
+	err = db.Model(&oldValues).Updates(&body).Scan(&response).Error
 	if err != nil{
 		log.Println(err.Error())
 		return nil, errors.New("failed to update rider")
 	}
+	newValues := oldValues
 
 	//update audit logs
 	if err := utilities.LogAudit("Update",user_id,role,"Rider",rider_id,nil,newValues,c); err != nil{
 		log.Println(err.Error())
 	}
-	return newValues,nil
+	return &response,nil
 }
 
 /*

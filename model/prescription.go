@@ -69,10 +69,10 @@ Gets users prescriptions
 */
 func GetUsersPrescription(c *fiber.Ctx, id uuid.UUID) (*[]ResponsePrescription, error) {
     response := new([]ResponsePrescription)
-    err := db.Preload("User").First(&Prescription{}, "user_approved_by = ?", id).Scan(&response).Error
+	Prescription := new(Prescription)
+    err := db.Preload("User").Find(&Prescription, "user_approved_by = ?", id).Scan(&response).Error
     if err != nil {
-        
-        log.Println(err.Error())
+        log.Println("error getting prescriptions",err.Error())
         return nil, errors.New("failed to get prescriptions")
     }
     return response, nil

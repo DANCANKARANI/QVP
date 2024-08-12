@@ -17,7 +17,7 @@ func SetPrescriptionRoutes(app *fiber.App) {
 
 	//delivery details
 	prescriptionGroup.Put("/:id/delivery",prescription.UpdateDeliveryDetailHandler)
-
+	prescriptionGroup.Get("/:id/delivery",prescription.GetPrescriptionDeliveryDetailsHandler)
 	//prescription details
 	prescriptionGroup.Post("/prescription-details/:prescription_id",prescription.AddPrescriptionDetailHandler)
 	prescriptionGroup.Patch("/:id/prescription-details/:prescription_id",prescription.UpdatePrescriptionDetailHandler)

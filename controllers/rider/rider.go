@@ -6,7 +6,6 @@ import (
 	"github.com/DANCANKARANI/QVP/model"
 	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 //gets the rider by id
@@ -21,16 +20,27 @@ if err != nil{
 
 //update rider handler
 func UpdateRiderHandler(c *fiber.Ctx)error{
-	rider_id,_:=uuid.Parse(c.Params("id"))
+	rider_id,_:=model.GetAuthUserID(c)
 	body:=model.Rider{}
 	if err := c.BodyParser(&body);err != nil {
 		log.Println(err.Error())
 		return utilities.ShowError(c,"failed to add rider",fiber.StatusForbidden)
 	}
-	IsValidData,err:= model.IsValidData(body.Email,body.PhoneNumber)
-	if err != nil&& !IsValidData {
-		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+
+	if body.PhoneNumber !="" && body.Email !=""{
+			IsValidData,err:= model.IsValidData(body.Email,body.PhoneNumber)
+			if err != nil&& !IsValidData {
+			return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+		}
 	}
+
+	//hash password
+	if body.Password != ""{
+		hashed_password,_ := utilities.HashPassword(body.Password)
+		body.Password = hashed_password
+	}
+
+
 	response, err := model.UpdateRider(c,rider_id,body)
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
@@ -40,7 +50,7 @@ func UpdateRiderHandler(c *fiber.Ctx)error{
 
 //delete update handler
 func DeleteRiderHandler(c *fiber.Ctx)error{
-	rider_id,_:=uuid.Parse(c.Params("id"))
+	rider_id,_:=model.GetAuthUserID(c)
 	err := model.DeleteRider(c,rider_id)
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)

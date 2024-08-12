@@ -116,3 +116,13 @@ func UpdateDeliveryDetailHandler(c *fiber.Ctx)error{
 	}
 	return utilities.ShowSuccess(c,"delivery details updated successfully",fiber.StatusOK,response)
 }
+
+//get delivery details handler
+func GetPrescriptionDeliveryDetailsHandler(c *fiber.Ctx)error{
+	prescription_id, _:= uuid.Parse(c.Params("id"))
+	response, err := model.GetPrescriptionDeliveryDetails(c,prescription_id)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	return utilities.ShowSuccess(c,"delivery details retrieved successfully",fiber.StatusOK,response)
+}

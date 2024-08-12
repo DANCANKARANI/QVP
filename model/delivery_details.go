@@ -70,3 +70,17 @@ func UpdateDeliveryDetails(c *fiber.Ctx,prescription_id uuid.UUID)(*DeliveryDeta
 
 	return &prescription.DeliveryDetails,nil
 }
+
+/*
+gets prescriptions delivery details
+*/
+func GetPrescriptionDeliveryDetails(c *fiber.Ctx, prescription_id uuid.UUID)(*DeliveryDetail,error){
+	prescription := new(Prescription)
+
+	if err := db.First(&prescription,"id =?",prescription_id).Error; err != nil{
+		log.Println("error getting delivery:",err.Error())
+		return nil, errors.New("failed to get delievery details")
+	}
+
+	return &prescription.DeliveryDetails,nil
+}
