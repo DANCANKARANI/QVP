@@ -81,6 +81,52 @@ func FindUser(email, phoneNumber string) (User, error) {
 
 
 /*
+finds if the rider with the given email and phone number is registered
+@params email
+@params phone_number
+*/
+func FindRider(email, phoneNumber string) (Rider, error) {
+	rider := Rider{}
+	err_str := fmt.Sprintf("user with email %s and phone number %s does not exist", email, phoneNumber)
+	err := db.Where("phone_number = ? AND email = ?", phoneNumber, email).First(&rider).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Println("")
+			return rider, errors.New(err_str)
+		}
+		return rider, errors.New(err_str)
+	}
+	return rider, nil
+}
+
+/*
+finds if the rider exists
+@params phone number
+*/
+func RiderExist(c *fiber.Ctx, phoneNumber string) (bool, *Rider, error) {
+   var  existingUser Rider
+
+    // Detailed logging
+    log.Printf("Checking for user with phone number: %s", phoneNumber)
+
+    result := db.Where("phone_number = ?", phoneNumber).First(&existingUser)
+    if result.Error != nil {
+        // Log the detailed error
+        log.Printf("Error finding user with phone number %s: %v", phoneNumber, result.Error)
+
+        if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			log.Println("record not found:",result.Error.Error())
+            return false, nil, nil
+        }
+
+        return false, nil, fmt.Errorf("database error: %v", result.Error)
+    }
+	log.Printf("User found: %+v", existingUser)
+    return true, &existingUser, nil
+}
+
+
+/*
 finds dependants using phone number only
 @params phone_number
 */

@@ -43,8 +43,8 @@ func AddPrescription(c *fiber.Ctx,user_id uuid.UUID) (*ResponsePrescription, err
 	body.SubTotal = prescription.SubTotal
 	body.VAT=prescription.VAT
 	body.Total=prescription.Total
-	body.UserApprovedBy = user_id
-	body.UserValidatedBy = user_id
+	body.UserApprovedBy = &user_id
+	body.UserValidatedBy = &user_id
 	body.ID = uuid.New()
 	err:=db.Create(&body).Error
 	if err != nil {
@@ -97,7 +97,7 @@ func UpdatePrescription(c *fiber.Ctx,id,user_id uuid.UUID)(*ResponsePrescription
 	body.SubTotal = prescription.SubTotal
 	body.VAT=prescription.VAT
 	body.Total=prescription.Total
-	body.UserApprovedBy=user_id
+	body.UserApprovedBy=&user_id
 	response := new(ResponsePrescription)
 
 	//find the prescription to be updated

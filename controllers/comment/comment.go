@@ -35,7 +35,7 @@ func UpdateCommentHandler(c *fiber.Ctx)error{
 func DeleteCommentHandler(c *fiber.Ctx)error{
 	comment_id, _ := uuid.Parse(c.Params("id"))
 
-	err := model.DeleteComment(comment_id)
+	err := model.DeleteComment(c,comment_id)
 	if err != nil{
 		if errors.Is(err, gorm.ErrRecordNotFound){
 			return utilities.ShowMessage(c,"record not found",fiber.StatusNotFound)

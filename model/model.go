@@ -28,7 +28,6 @@ type User struct {
     Notification      []Notification      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Team              []Team              `gorm:"many2many:team_users"`
     Prescriptions     []Prescription      `gorm:"foreignKey:UserValidatedBy;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
-    Audits            []Audit             `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
 }
 
 type Image struct {
@@ -112,6 +111,7 @@ type Notification struct {
     UpdatedAt time.Time         `json:"updated_at" gorm:"autoCreateTime"`
     ReceivedBy uuid.UUID        `json:"received_by"`
 }
+
 //prescription db model
 type Prescription struct {
     ID               uuid.UUID      `json:"id" gorm:"type:varchar(36);primary_key"`
@@ -123,17 +123,17 @@ type Prescription struct {
     CreatedAt        time.Time      `json:"created_at" gorm:"autoCreateTime"`
     UpdatedAt        time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
     DeletedAt        gorm.DeletedAt `json:"deleted_at" gorm:"index"`
-    DeliveryDetails  string         `json:"delivery_details" gorm:"type:text"`
+    DeliveryDetails  DeliveryDetail `json:"delivery_details" gorm:"type:json"`
     UserValidatedAt  *time.Time     `json:"user_validated_at"`
-    UserValidatedBy  uuid.UUID      `json:"user_validated_by" gorm:"type:varchar(36);default:NULL"`
+    UserValidatedBy  *uuid.UUID      `json:"user_validated_by" gorm:"type:varchar(36);default:NULL"`
     UserApprovedAt   *time.Time     `json:"user_approved_at"`
-    UserApprovedBy   uuid.UUID      `json:"user_approved_by" gorm:"type:varchar(36);default:NULL"`
+    UserApprovedBy   *uuid.UUID      `json:"user_approved_by" gorm:"type:varchar(36);default:NULL"`
     AdminValidateAt  *time.Time     `json:"admin_validate_at"`
     AdminValidateBy  uuid.UUID      `json:"admin_validate_by" gorm:"type:varchar(36);default:NULL"`
     AdminApprovedAt  *time.Time     `json:"admin_approved_at"`
-    AdminApprovedBy  uuid.UUID      `json:"admin_approved_by" gorm:"type:varchar(36);default:NULL"`
+    AdminApprovedBy  *uuid.UUID      `json:"admin_approved_by" gorm:"type:varchar(36);default:NULL"`
     DeliveredAt      *time.Time     `json:"delivered_at"`
-    DeliveredBy      uuid.UUID      `json:"delivered_by" gorm:"type:varchar(36); default:NULL"`
+    DeliveredBy      *uuid.UUID      `json:"delivered_by" gorm:"type:varchar(36); default:NULL"`
     QuoteDetail     []QuoteDetail   `gorm:"foreignKey:PrescriptionID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     // Relationships
     User             User           `json:"user" gorm:"foreignKey:UserValidatedBy"`
@@ -195,8 +195,8 @@ type Rider struct {
     DeletedAt gorm.DeletedAt`json:"deleted_at"`
     EmailVerifiedAt *time.Time `json:"email_verified_at" gorm:"autoUpdateTime"`
     Password  string        `json:"password" gorm:"type:varchar(255)"`
-    CurrentTeamId uuid.UUID `json:"current_team_id"`
-    ImageID     uuid.UUID   `json:"image_id" gorm:"type:varchar(36)"`
+    CurrentTeamId uuid.UUID `json:"current_team_id" gorm:"type:varchar(36); default:NULL" `
+    ImageID     uuid.UUID   `json:"image_id" gorm:"type:varchar(36); default:NULL"`
     Image       Image       `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
     //ProfilePhotoPath string `json:"profile_photo_path" gorm:"type:varchar(255)"`
     Prescriptions []Prescription `gorm:"foreignKey:DeliveredBy;constraint:OnUpdate:CASCADE;OnDelete:SET NULL;reference:ID"`
@@ -299,7 +299,7 @@ type QuoteDetail struct{
 type Audit struct{
     ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
     UserType        string              `json:"user_type" gorm:"type:varchar(255)"`
-    UserID          uuid.UUID           `json:"user_id" gorm:"type:varchar(36); default:NULL"`
+    UserID          uuid.UUID           `json:"user_id" gorm:"type:varchar(36);"`
     Event           string              `json:"event" gorm:"type:varchar(255)"`
     AuditableType   string              `json:"auditable_type" gorm:"type:varchar(255)"`
     AuditableID     uuid.UUID           `json:"auditable_id" gorm:"type:varchar(255)"`
@@ -317,7 +317,6 @@ type Audit struct{
 //failed jobs db model
 type FailedJob struct{
     ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
-    Uuid            string              `json:"uuid" gorm:"type:varchar(255)"`
     Connection      string              `json:"connection" gorm:"type:text"`
     Queue           string              `json:"queue" gorm:"type:text"`
     Payload         string              `json:"payload" gorm:"type:longtext"`
@@ -346,4 +345,21 @@ type Sms struct{
     CallbackStatus  string              `json:"callback_status" gorm:"type:varchar(255)"`
     CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
     UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
+}
+
+//insurancers
+type Insurancer struct{
+    ID              uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
+    InsuranceID     uuid.UUID           `json:"insurance_id" gorm:"type:varchar(255)"`
+    FullName        string              `json:"full_name" gorm:"type:varchar(255)"`
+    Email           string              `json:"email" gorm:"type:varchar(255)"`
+    PhoneNumber     string              `json:"phone_number" gorm:"type:varchar(255)"`
+    EmailVerifiedAt time.Time           `json:"email_verified_at" gorm:"type:timestamp"`
+    Password        string              `json:"password" gorm:"type:varchar(255)"`
+    RememberToken   string              `json:"remember_token" gorm:"type:varchar(100)"`
+    CurrentTeamId   uuid.UUID           `json:"current_team_id" gorm:"type:varchar(36); NOT NULL"`
+    ProfilePhotoPath   string           `json:"profile_photo_path" gorm:"type:varchar(2048)"`
+    CreatedAt       time.Time           `json:"created_at" gorm:"autoCreateTime"`
+    UpdatedAt       time.Time           `json:"updated_at" gorm:"autoUpdateTime"`
+    DeletedAt       gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
 }

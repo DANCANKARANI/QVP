@@ -15,6 +15,9 @@ func SetPrescriptionRoutes(app *fiber.App) {
 	prescriptionGroup.Delete("/:id",prescription.DeletePrescriptionHandler)
 	prescriptionGroup.Get("/all",prescription.GetAllPrescriptionsHandler)
 
+	//delivery details
+	prescriptionGroup.Put("/:id/delivery",prescription.UpdateDeliveryDetailHandler)
+
 	//prescription details
 	prescriptionGroup.Post("/prescription-details/:prescription_id",prescription.AddPrescriptionDetailHandler)
 	prescriptionGroup.Patch("/:id/prescription-details/:prescription_id",prescription.UpdatePrescriptionDetailHandler)

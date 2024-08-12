@@ -14,12 +14,12 @@ func SetUserRoutes(app *fiber.App) {
 	userGroup := auth.Group("/",user.JWTMiddleware)
 	userGroup.Get("/all",user.GetAllUsersHandler)
 	userGroup.Get("/",user.GetOneUserHandler)
-	userGroup.Post("/:id",user.AddUserInsurance)
-	userGroup.Patch("/:id",user.UpdateUserInsurance)
-	userGroup.Patch("/",user.UpdateUserHandler)
+	userGroup.Post("insurance/:id",user.AddUserInsurance)
+	userGroup.Patch("insurance/:id",user.UpdateUserInsurance)
+	userGroup.Patch("/:id",user.UpdateUserHandler)
 	userGroup.Post("/forgot-password",user.ForgotPassword)
 	userGroup.Post("/reset-password",user.ResetPassword)
-	userGroup.Get("/logout",user.Logout)
+	userGroup.Post("/logout",user.Logout)
 	userGroup.Patch("/:id",user.UpdateUserHandler)
 
 	//get teams for a user

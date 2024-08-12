@@ -104,3 +104,15 @@ func GetUsersPrescriptionDetailHandler(c *fiber.Ctx)error{
 	return utilities.ShowSuccess(c,"successfully retrieved users prescription details",fiber.StatusOK,response)
 }
 
+
+//update delivery details handler
+func UpdateDeliveryDetailHandler(c *fiber.Ctx)error{
+
+	prescrition_id,_:= uuid.Parse(c.Params("id"))
+
+	response, err := model.UpdateDeliveryDetails(c,prescrition_id)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInsufficientStorage)
+	}
+	return utilities.ShowSuccess(c,"delivery details updated successfully",fiber.StatusOK,response)
+}

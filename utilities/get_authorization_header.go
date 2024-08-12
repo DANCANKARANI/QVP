@@ -1,8 +1,9 @@
 package utilities
 
 import (
-	"errors"
+	"log"
 	"strings"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -11,17 +12,21 @@ gets the jwt token from authorization header
 */
 
 func GetJWTToken(c *fiber.Ctx)(string,error){
-	authHeader := c.Get(fiber.HeaderAuthorization)
-	if authHeader == "" {
-		
-		return "", errors.New("failed to get the token from the header")
-	}
-	//split the token into "Bearer" and token
-	tokenString :=strings.TrimSpace(strings.TrimPrefix(authHeader,"Bearer"))
+	// Check for token in cookies first
+    tokenString := c.Cookies("Authorization")
 
-	if tokenString == ""{
-		
-		return "", errors.New("failed to split the token")
-	}
+    // If not found in cookies, check the Authorization header
+    if tokenString == "" {
+        authHeader := c.Get("Authorization")
+        if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+            tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+        }
+    }
+
+    // If token is still not found, return unauthorized error
+    if tokenString == "" {
+        log.Println("missing jwt")
+        return "",ShowError(c, "unauthorized", fiber.StatusUnauthorized)
+    }
 	return tokenString, nil
 }

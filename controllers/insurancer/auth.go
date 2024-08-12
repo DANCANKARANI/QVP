@@ -1,32 +1,34 @@
-package user
+package insurancer
 
 import (
 	"log"
 	"time"
+
+	"github.com/DANCANKARANI/QVP/controllers/user"
 	"github.com/DANCANKARANI/QVP/middleware"
 	"github.com/DANCANKARANI/QVP/model"
 	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/gofiber/fiber/v2"
 )
-type ResponseUser struct{
-	FullName string 	`json:"full_name"`
-	PhoneNumber string 	`json:"phone_number"`
-	Email string 		`json:"email"`
-}
-type loginResponse struct {
-	Token string `json:"token"`
-}
 
-func Login(c *fiber.Ctx)error{
-	user := model.User{}
+//response
+type loginResponse struct{
+	Token string 	`json:"token"`
+}
+//insurancer login
+func InsurancerLogin(c *fiber.Ctx) error {
+	user := model.Insurancer{} 
+
+	//parse request body
 	if err := c.BodyParser(&user); err !=nil {
 		return utilities.ShowError(c,"failed to login",fiber.StatusInternalServerError)
 	}
 
 	//check of user exist
-	userExist,existingUser,_:= model.UserExist(c,user.PhoneNumber)
+	userExist,existingUser,_:= model.InsurerExist(c,user.PhoneNumber)
 	if ! userExist {
-		return utilities.ShowError(c,"user does not exist",fiber.StatusNotFound)
+		err_str :="insurancer with this phone number:"+ user.PhoneNumber+" does not exist"
+		return utilities.ShowError(c,err_str,fiber.StatusNotFound)
 	}
 	
 	//compare password
@@ -37,7 +39,7 @@ func Login(c *fiber.Ctx)error{
 	}
 	exp :=time.Hour*24
 	//generating token
-	tokenString,err := middleware.GenerateToken(middleware.Claims{UserID: &existingUser.ID,Role: "normal"},exp)
+	tokenString,err := middleware.GenerateToken(middleware.Claims{UserID: &existingUser.ID,Role: "Insurancer"},exp)
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
@@ -55,19 +57,20 @@ func Login(c *fiber.Ctx)error{
 	}
 
 	//update audit logs
-	if err := utilities.LogAudit("Login",existingUser.ID,"normal","User",existingUser.ID,existingUser,existingUser,c); err != nil{
+	if err := utilities.LogAudit("Login",existingUser.ID,"Insurancer","User",existingUser.ID,existingUser,existingUser,c); err != nil{
 		log.Println(err.Error())
 	}
 
-	return utilities.ShowSuccess(c,"successfully logged in",fiber.StatusOK,response_user)	
+	return utilities.ShowSuccess(c,"successfully logged in",fiber.StatusOK,response_user)
 }
 
-//logut user
+//logout
 func Logout(c *fiber.Ctx) error {
-	err :=LogoutService(c,"normal")
+	//call logout service
+	err := user.LogoutService(c,"Insurancer")
 	if err != nil{
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
-	return  utilities.ShowMessage(c,"user logged out successfully",fiber.StatusOK)
+	//response
+	return utilities.ShowMessage(c,"successfully logged out",fiber.StatusOK)
 }
-

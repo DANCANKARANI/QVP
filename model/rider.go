@@ -18,14 +18,14 @@ func CreateRiderAccount(c *fiber.Ctx,body Rider)error {
 	return nil;
 }
 //validate function
-func IsValidData(body Rider)(bool,error){
+func IsValidData(email, phone_number string)(bool,error){
 	//validate email address
-	_,err:= utilities.ValidateEmail(body.Email)
+	_,err:= utilities.ValidateEmail(email)
 	if err != nil {
 		return false,errors.New(err.Error())
 	}
 	//validate phone number
-	_,err=utilities.ValidatePhoneNumber(body.PhoneNumber,country_code)
+	_,err=utilities.ValidatePhoneNumber(phone_number,country_code)
 	if err != nil {
 		return false,errors.New(err.Error())
 	}
@@ -96,3 +96,5 @@ func DeleteRider(c *fiber.Ctx, rider_id uuid.UUID)(error){
 	//response
 	return nil
 }
+
+//check if rider already exists

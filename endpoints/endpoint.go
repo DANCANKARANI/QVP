@@ -7,6 +7,7 @@ import (
 	"github.com/DANCANKARANI/QVP/routes/images"
 	"github.com/DANCANKARANI/QVP/routes/insurance"
 	"github.com/DANCANKARANI/QVP/routes/insurance_users"
+	"github.com/DANCANKARANI/QVP/routes/insurancers"
 	"github.com/DANCANKARANI/QVP/routes/modules"
 	"github.com/DANCANKARANI/QVP/routes/notifications"
 	"github.com/DANCANKARANI/QVP/routes/payment_methods"
@@ -33,6 +34,7 @@ func CreateEndpoint(){
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization", 
 	}))
 	dependants.SetDependantRoutes(app)
+	insurancers.SetInsurancersRoutes(app)
 	users.SetUserRoutes(app)
 	payment_methods.SetPaymentMethodRoutes(app)
 	payments.SetPaymentRoutes(app)
@@ -50,6 +52,7 @@ func CreateEndpoint(){
 	quote_details.SetQuoteDetailsRoutes(app)
 	comments.SetCommentRoutes(app)
 	smss.SetSmsRoutes(app)
+
 	
 	//audits.SetAuditsRoutes(app)
 	//port
