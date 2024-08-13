@@ -14,5 +14,11 @@ func SetAdminsRoutes(app *fiber.App) {
 
 	//protected routes
 	adminGroup := auth.Group("/", user.JWTMiddleware)
+	adminGroup.Get("/",admin.GetAdminDetailsHandler)
 	adminGroup.Post("/logout",admin.Logout)
+	adminGroup.Patch("/",admin.UpdateAdminHandler)
+	adminGroup.Put("/",admin.UpdateProfilePicHandler)
+	adminGroup.Get("/all",admin.GetAllAdminsHandler)
+	adminGroup.Delete("/",admin.DeleteAdmin)
+
 }

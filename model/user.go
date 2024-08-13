@@ -17,7 +17,7 @@ type ResponseUser struct{
 	FullName string 	`json:"full_name"`
 	PhoneNumber string 	`json:"phone_number"`
 	Email string 		`json:"email"`
-	ImageID uuid.UUID   `json:"image_id,omitempty"`
+	ProfilePhotoPath string	`json:"profile_photo_path"`
 }
 
 func GetOneUSer(c *fiber.Ctx)(*ResponseUser,error){
@@ -57,18 +57,53 @@ func UpdateUser(c *fiber.Ctx) (*ResponseUser, error) {
         return nil, errors.New("failed to parse: " + err.Error())
     }
 
+	//validate phone number
+	if body.PhoneNumber !=""{
+		_,err :=utilities.ValidatePhoneNumber(body.PhoneNumber,country_code)
+		if err != nil{
+			return nil, err
+		}
+		exist,_,err:=UserExist(c,body.PhoneNumber)
+		if err != nil{
+			return nil, err
+		}
+		if exist{
+			err_str := "user with phone:"+body.PhoneNumber+" already exist"
+			return nil, errors.New(err_str)
+		}
+	}
+
+	//validate email
+	if body.Email !=""{
+		_, err := utilities.ValidateEmail(body.Email)
+		if err != nil{
+			return nil, err
+		}
+	}
+
+	//hash password
+	if body.Password != ""{
+		hashed_password, err:= utilities.HashPassword(body.Password)
+		if err != nil{
+			return nil,err
+		}
+		body.Password= hashed_password
+	}
     // Fetch the current user record to get old values
     oldValues := new(User)
     if err := db.First(&oldValues, "id = ?", id).Error; err != nil {
         return nil, errors.New("failed to fetch current user: " + err.Error())
     }
 	response := new(ResponseUser)
+
     // Update the user record
-    if err := db.Model(&User{}).Where("id = ?", id).Updates(&body).Scan(&body).Scan(response).Error; err != nil {
+    if err := db.Model(&oldValues).Updates(&body).Scan(response).Error; err != nil {
         return nil, errors.New("error in updating the user: " + err.Error())
     }
+
+
     // Audit logs
-    newValues := &body
+    newValues := &oldValues
     if err := utilities.LogAudit("update", id, role, "User", id, oldValues, newValues, c); err != nil {
         log.Println(err.Error())
         return nil, errors.New("error updating audit log")
@@ -132,6 +167,46 @@ func MapUserToResponse(user User) ResponseUser {
         FullName:    user.FullName,
         PhoneNumber: user.PhoneNumber,
         Email:       user.Email,
-        ImageID:     *user.ImageID, // Ensure this is populated correctly
+        ProfilePhotoPath: user.ProfilePhotoPath,
     }
+}
+
+/*
+update users profile picture
+@params user_id
+*/
+func UpdateUserProfilePic(c *fiber.Ctx, user_id uuid.UUID)(*ResponseUser,error){
+	user := new(User)
+
+	//generate image url
+	profile_photo_path,err:=utilities.GenerateUrl(c,"profile")
+	if err != nil{
+		return nil, err
+	}
+	User := User{
+		ProfilePhotoPath: profile_photo_path,
+	}
+	
+	//find user
+	if err := db.First(&user,"id = ?",user_id).Error; err != nil{
+		log.Println("user not found:",err.Error())
+		return nil, errors.New("failed to update profile image")
+	}
+	oldValues := user
+	response := new(ResponseUser)
+	//update profile image
+	if err := db.Model(user).Updates(&User).Scan(response).Error; err != nil{
+		log.Println("failed to update profile image:", err.Error())
+		return nil, errors.New("failed to update profile image")
+	}
+	newValues := user
+	
+	//update audit log
+
+	role := GetAuthUser(c)
+
+	if err := utilities.LogAudit("Update",user_id,role,"User",user_id,oldValues,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+	return response, nil
 }

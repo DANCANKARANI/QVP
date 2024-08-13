@@ -57,3 +57,13 @@ func DeleteRiderHandler(c *fiber.Ctx)error{
 	}
 	return utilities.ShowMessage(c,"successfully deleted rider",fiber.StatusOK)
 }
+//update rider profile image handler
+func UpdateRiderProfilePic(c *fiber.Ctx)error{
+	rider_id, _:= model.GetAuthUserID(c)
+	response, err := model.UpdateRiderProfilePic(c,rider_id)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+
+	return utilities.ShowSuccess(c,"successfully updated profile image",fiber.StatusOK,response)
+}

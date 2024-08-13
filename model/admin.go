@@ -28,9 +28,10 @@ func AddAdmin(c *fiber.Ctx, body Admin)(*ResAdmin,error){
 	}
 
 	//check if admin already exist
-	exist,_, err := AdminExist(c, body.PhoneNumber)
-	if exist && err != nil{
-		return nil, err
+	exist,_, _ := AdminExist(c, body.PhoneNumber)
+	if exist {
+		err_str := "admin with phone number:"+body.PhoneNumber+" already exists"
+		return nil, errors.New(err_str)
 	}
 	response := new(ResAdmin)
 	
@@ -46,10 +47,9 @@ func AddAdmin(c *fiber.Ctx, body Admin)(*ResAdmin,error){
 		return nil, errors.New("failed to add admin")
 	}
 
-	role := GetAuthUser(c)
 
 	//update log audit
-	if err := utilities.LogAudit("Register",body.ID,role,"Admin",body.ID,nil,body,c); err != nil{
+	if err := utilities.LogAudit("Register",body.ID,"Admin","Admin",body.ID,nil,body,c); err != nil{
 		log.Println(err.Error())
 	}
 
@@ -64,7 +64,7 @@ func AdminExist(c *fiber.Ctx, phoneNumber string)(bool,*Admin,error){
 	admin := Admin{}
 	log.Printf("Checking for user with phone number: %s", phoneNumber)
  
-	result := db.Where("phone_number = ?", phoneNumber).First(&admin)
+	result := db.First(&admin,"phone_number = ?",phoneNumber)
 	if result.Error != nil {
 		// Log the detailed error
 		log.Printf("Error finding user with phone number %s: %v", phoneNumber, result.Error)
@@ -95,11 +95,16 @@ func UpdateAdminDetails(c *fiber.Ctx)(*ResAdmin,error){
 
 	//validate phone
 	if body.PhoneNumber != ""{
-		phone_number,err:=utilities.ValidatePhoneNumber(body.PhoneNumber,"KE")
+		_,err:=utilities.ValidatePhoneNumber(body.PhoneNumber,"KE")
 		if err != nil{
 			return nil, err
 		}
-		body.PhoneNumber = phone_number
+		exist,_,_ :=AdminExist(c,body.PhoneNumber)
+		if exist{
+			err_str := "admin with phone number:"+body.PhoneNumber+" already exists"
+			return nil, errors.New(err_str)
+		}
+		
 	}
 
 	//validate email 
@@ -119,13 +124,14 @@ func UpdateAdminDetails(c *fiber.Ctx)(*ResAdmin,error){
 		}
 		body.Password = hashed_password
 	}
-
+	
 	//check of user exist
 	existingAdmin := new(Admin)
 	if err := db.First(&existingAdmin,"id = ?",admin_id).Error; err != nil{
 		log.Println("error findind admin:",err.Error())
 		return nil, errors.New("failed to update admin")
 	}
+
 	oldValues := existingAdmin
 	response := new(ResAdmin)
 	//update admin model 
@@ -156,3 +162,68 @@ func GetAdminDetails(c *fiber.Ctx, admin_id uuid.UUID)(*ResAdmin,error){
 
 	return response, nil
 }
+
+/*
+delete all admins
+*/
+func DeleteAdmnin(c *fiber.Ctx, phone_number string)(error){
+
+	if err := db.Unscoped().Where("1 = 1").Delete(&Admin{}).Error; err != nil {
+		log.Println("error deleting all admins:", err.Error())
+		return errors.New("error deleting all admin records")
+	}
+	
+	return nil
+}
+
+//gets all admins
+func GetAllAdmins(c *fiber.Ctx)(*[]ResAdmin,error){
+	admin := new(Admin)
+	response := new([]ResAdmin)
+	if err := db.Model(admin).Find(admin).Scan(response).Error; err != nil{
+		log.Println("error getting admins:",err.Error())
+		return nil,errors.New("failed to get admins")
+	}
+	return response, nil
+}
+
+/*
+updates pprofile image
+@params admin_id
+*/
+func UpdateProfilePic(c *fiber.Ctx, admin_id uuid.UUID)(*ResAdmin,error){
+	admin := new(Admin)
+
+	//generate image url
+	profile_photo_path,err:=utilities.GenerateUrl(c,"profile")
+	if err != nil{
+		return nil, err
+	}
+	Admin := Admin{
+		ProfilePhotoPath: profile_photo_path,
+	}
+	
+	//find admin
+	if err := db.First(&admin,"id = ?",admin_id).Error; err != nil{
+		log.Println("admin not found:",err.Error())
+		return nil, errors.New("failed to update profile image")
+	}
+	oldValues := admin
+	response := new(ResAdmin)
+	//update profile image
+	if err := db.Model(admin).Updates(&Admin).Scan(response).Error; err != nil{
+		log.Println("failed to update profile image:", err.Error())
+		return nil, errors.New("failed to update profile image")
+	}
+	newValues := admin
+	
+	//update audit log
+
+	role := GetAuthUser(c)
+
+	if err := utilities.LogAudit("Update",admin_id,role,"Admin",admin_id,oldValues,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+	return response, nil
+}
+

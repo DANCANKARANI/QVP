@@ -9,8 +9,8 @@ import (
 type User struct {
     ID                uuid.UUID           `json:"id" gorm:"type:varchar(36);primary_key"`
     FullName          string              `json:"full_name" gorm:"size:255"`
-    Email             string              `json:"email" gorm:"size:255;unique"`
-    PhoneNumber       string              `json:"phone_number" gorm:"size:255;unique"`
+    Email             string              `json:"email" gorm:"size:255;unique; not null"`
+    PhoneNumber       string              `json:"phone_number" gorm:"size:255;unique; not null"`
     CountryCode       string              `json:"country_code" gorm:"size:10"`
     Password          string              `json:"password" gorm:"size:255"`
     ConfirmPassword   string              `json:"confirm_password" gorm:"size:255"`     
@@ -20,8 +20,7 @@ type User struct {
     CreatedAt         time.Time           `json:"created_at" gorm:"autoCreateTime"`
     DeletedAt         gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
     UpdatedAt         time.Time           `json:"updated_at" gorm:"autoCreateTime"`
-    ImageID           *uuid.UUID           `json:"image_id" gorm:"type:varchar(36);default:NULL"`
-    Image             *Image               `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+    ProfilePhotoPath    string            `json:"profile_photo_path" gorm:"type:varchar(2048)"`
     Insurance         []Insurance         `gorm:"many2many:insurance_users"`
     Dependants        []Dependant         `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
     Payment           []Payment           `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;references:ID"`
@@ -168,8 +167,8 @@ type Branch struct {
 type Admin struct {
     ID              uuid.UUID       `json:"id" gorm:"type:varchar(36);primary_key"`
     FullName        string          `json:"full_name" gorm:"type:varchar(255)"`
-    Email           string          `json:"email" gorm:"type:varchar(255)"`
-    PhoneNumber     string          `json:"phone_number" gorm:"type:varchar(255)"`
+    Email           string          `json:"email" gorm:"type:varchar(255); unique;not null"`
+    PhoneNumber     string          `json:"phone_number" gorm:"type:varchar(255);unique; not null"`
     EmailVerifiedAt *time.Time      `json:"email_verified_at" gorm:"autoUpdateTime"`
     Password        string          `json:"password" gorm:"type:varchar(255)"`
     RememberToken   string          `json:"remember_token" gorm:"type:varchar(100)"`
@@ -196,9 +195,7 @@ type Rider struct {
     EmailVerifiedAt *time.Time `json:"email_verified_at" gorm:"autoUpdateTime"`
     Password  string        `json:"password" gorm:"type:varchar(255)"`
     CurrentTeamId uuid.UUID `json:"current_team_id" gorm:"type:varchar(36); default:NULL" `
-    ImageID     uuid.UUID   `json:"image_id" gorm:"type:varchar(36); default:NULL"`
-    Image       Image       `gorm:"foreignKey:ImageID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
-    //ProfilePhotoPath string `json:"profile_photo_path" gorm:"type:varchar(255)"`
+    ProfilePhotoPath string `json:"profile_photo_path" gorm:"type:varchar(255)"`
     Prescriptions []Prescription `gorm:"foreignKey:DeliveredBy;constraint:OnUpdate:CASCADE;OnDelete:SET NULL;reference:ID"`
 }
 

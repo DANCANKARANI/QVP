@@ -57,3 +57,15 @@ func UpdateUserInsurance(c *fiber.Ctx)error{
 	}
 	return utilities.ShowSuccess(c,"succssfully updated users insurance",fiber.StatusOK,insuranceUser)
 }
+
+//update profile image handler
+func UpdateProfileImageHandler(c *fiber.Ctx)error{
+	user_id, _ := model.GetAuthUserID(c)
+
+	response, err := model.UpdateUserProfilePic(c,user_id)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+
+	return utilities.ShowSuccess(c,"profile image updated successfully",fiber.StatusOK,response)
+}

@@ -20,7 +20,8 @@ func SetUserRoutes(app *fiber.App) {
 	userGroup.Post("/forgot-password",user.ForgotPassword)
 	userGroup.Post("/reset-password",user.ResetPassword)
 	userGroup.Post("/logout",user.Logout)
-	userGroup.Patch("/:id",user.UpdateUserHandler)
+	userGroup.Patch("/",user.UpdateUserHandler)
+	userGroup.Put("/",user.UpdateProfileImageHandler)
 
 	//get teams for a user
 	userGroup.Get("/:user_id/teams",team_user.GetTeamsForUserHandler)

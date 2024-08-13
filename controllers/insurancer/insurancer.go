@@ -36,3 +36,13 @@ func DeleteInsurancerHandler(c *fiber.Ctx)error{
 
 	return utilities.ShowMessage(c,"successfully deleted insurancer",fiber.StatusOK)
 }
+
+//update insurancer profile image handler
+func UpdateInsurancerProfilePicHandler(c *fiber.Ctx)error{
+	insurancer_id, _:= model.GetAuthUserID(c)
+	response, err := model.UpdateInsurancerProfilePic(c,insurancer_id)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	return utilities.ShowSuccess(c,"insurancer profile image updated successfully",fiber.StatusOK,response)
+}

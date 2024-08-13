@@ -17,4 +17,5 @@ func SetInsurancersRoutes(app *fiber.App) {
 	insurancerGroup.Post("/logout",insurancer.Logout)
 	insurancerGroup.Patch("/",insurancer.UpdateInsurancer)
 	insurancerGroup.Delete("/",insurancer.DeleteInsurancerHandler)
+	insurancerGroup.Put("/",insurancer.UpdateInsurancerProfilePicHandler)
 }

@@ -14,6 +14,7 @@ func SetRiderRoutes(app *fiber.App) {
 	riderGroup :=auth.Group("/",user.JWTMiddleware)
 	riderGroup.Get("/",rider.GetRiderHandler)
 	riderGroup.Patch("/",rider.UpdateRiderHandler)
+	riderGroup.Put("/",rider.UpdateRiderProfilePic)
 	riderGroup.Delete("/", rider.DeleteRiderHandler)
 	riderGroup.Post("/logout",rider.Logout)
 }

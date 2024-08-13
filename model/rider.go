@@ -17,6 +17,7 @@ type ResRider struct{
 	PhoneNumber	string		`json:"phone_number"`
 	Email		string		`json:"email"`
 	IdNumber	string		`json:"id_number"`
+	ProfilePhotoPath string	`json:"profile_photo_path"`
 }
 func CreateRiderAccount(c *fiber.Ctx,body Rider)(uuid.UUID,error ){
 	id:=uuid.New()
@@ -65,6 +66,38 @@ func UpdateRider(c *fiber.Ctx, rider_id uuid.UUID,body Rider)(*ResRider,error){
 	role := GetAuthUser(c)
 
 	//parse request body
+	//validate phone number
+	if body.PhoneNumber !=""{
+		_,err :=utilities.ValidatePhoneNumber(body.PhoneNumber,country_code)
+		if err != nil{
+			return nil, err
+		}
+		exist,_,err:=RiderExist(c,body.PhoneNumber)
+		if err != nil{
+			return nil, err
+		}
+		if exist{
+			err_str := "user with phone:"+body.PhoneNumber+" already exist"
+			return nil, errors.New(err_str)
+		}
+	}
+
+	//validate email
+	if body.Email !=""{
+		_, err := utilities.ValidateEmail(body.Email)
+		if err != nil{
+			return nil, err
+		}
+	}
+
+	//hash password
+	if body.Password != ""{
+		hashed_password, err:= utilities.HashPassword(body.Password)
+		if err != nil{
+			return nil,err
+		}
+		body.Password= hashed_password
+	}
 
 	response := ResRider{}
 	oldValues := new(Rider)
@@ -111,4 +144,40 @@ func DeleteRider(c *fiber.Ctx, rider_id uuid.UUID)(error){
 	return nil
 }
 
-//check if rider already exists
+//update rider profile image
+func UpdateRiderProfilePic(c *fiber.Ctx, rider_id uuid.UUID)(*ResRider,error){
+	rider := new(Rider)
+
+	//generate image url
+	profile_photo_path,err:=utilities.GenerateUrl(c,"profile")
+	if err != nil{
+		return nil, err
+	}
+	Rider := Rider{
+		ProfilePhotoPath: profile_photo_path,
+	}
+	
+	//find user
+	if err := db.First(&rider,"id = ?",rider_id).Error; err != nil{
+		log.Println("rider not found:",err.Error())
+		return nil, errors.New("failed to update profile image")
+	}
+	oldValues := rider
+	response := new(ResRider)
+	//update profile image
+	if err := db.Model(rider).Updates(&Rider).Scan(response).Error; err != nil{
+		log.Println("failed to update profile image:", err.Error())
+		return nil, errors.New("failed to update profile image")
+	}
+	newValues := rider
+	
+	//update audit log
+
+	role := GetAuthUser(c)
+
+	if err := utilities.LogAudit("Update",rider_id,role,"User",rider_id,oldValues,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
+	return response, nil
+}
+

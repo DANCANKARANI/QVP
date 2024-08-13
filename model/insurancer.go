@@ -15,6 +15,7 @@ type ResInsurancer struct{
 	FullName	string		`json:"full_name"`
 	Email		string		`json:"email"`
 	PhoneNumber	string		`json:"phone_number"`
+	ProfilePhotoPath string	`json:"profile_photo_path"`
 }
 /*
 creates insurancer account
@@ -78,22 +79,37 @@ func UpdateInsurancer(c *fiber.Ctx, insurancer_id uuid.UUID)(*ResInsurancer,erro
 		log.Println("error parsing request body:", err.Error())
 		return nil, errors.New("error parsing request body")
 	}
-	if body.PhoneNumber != "" || body.Email != ""{
-		valid,err :=IsValidData(body.Email,body.PhoneNumber)
-		if !valid{
+	//validate phone number
+	if body.PhoneNumber !=""{
+		_,err :=utilities.ValidatePhoneNumber(body.PhoneNumber,country_code)
+		if err != nil{
 			return nil, err
 		}
-
-		//check if the phone number is already used
-		exist,_,_:=InsurerExist(c,body.PhoneNumber)
+		exist,_,err:=InsurerExist(c,body.PhoneNumber)
+		if err != nil{
+			return nil, err
+		}
 		if exist{
-			err_str := "phone number:"+body.PhoneNumber+" is already in use"
+			err_str := "user with phone:"+body.PhoneNumber+" already exist"
 			return nil, errors.New(err_str)
 		}
 	}
+
+	//validate email
+	if body.Email !=""{
+		_, err := utilities.ValidateEmail(body.Email)
+		if err != nil{
+			return nil, err
+		}
+	}
+
+	//hash password
 	if body.Password != ""{
-		hashed_password,_ := utilities.HashPassword(body.Password)
-		insurancer.Password= hashed_password
+		hashed_password, err:= utilities.HashPassword(body.Password)
+		if err != nil{
+			return nil,err
+		}
+		body.Password= hashed_password
 	}
 
 	//find old values
@@ -159,5 +175,45 @@ func GetInsurancer(c *fiber.Ctx, insurancer_id uuid.UUID)(*ResInsurancer,error){
 		return nil, errors.New("errors getting insurancer details")
 	}
 
+	return response, nil
+}
+
+/*
+updates insurancer profile image
+@params insurancer_id
+*/
+func UpdateInsurancerProfilePic(c *fiber.Ctx, insurancer_id uuid.UUID)(*ResInsurancer,error){
+	insurancer := new(Insurancer)
+
+	//generate image url
+	profile_photo_path,err:=utilities.GenerateUrl(c,"profile")
+	if err != nil{
+		return nil, err
+	}
+	Insurancer := Insurancer{
+		ProfilePhotoPath: profile_photo_path,
+	}
+	
+	//find user
+	if err := db.First(&insurancer,"id = ?",insurancer_id).Error; err != nil{
+		log.Println("insurancer not found:",err.Error())
+		return nil, errors.New("failed to update profile image")
+	}
+	oldValues := insurancer
+	response := new(ResInsurancer)
+	//update profile image
+	if err := db.Model(insurancer).Updates(&Insurancer).Scan(response).Error; err != nil{
+		log.Println("failed to update profile image:", err.Error())
+		return nil, errors.New("failed to update profile image")
+	}
+	newValues := insurancer
+	
+	//update audit log
+
+	role := GetAuthUser(c)
+
+	if err := utilities.LogAudit("Update",insurancer_id,role,"Insurancer",insurancer_id,oldValues,newValues,c); err != nil{
+		log.Println(err.Error())
+	}
 	return response, nil
 }
