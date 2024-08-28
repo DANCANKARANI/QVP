@@ -37,7 +37,19 @@ func AddPrescription(c *fiber.Ctx,user_id uuid.UUID) (*ResponsePrescription, err
 	
 	body.QuoteNumber = GenerateQuoteNumber()
 
-	body.SubTotal = CalculateSubTotal(&body)
+	    // Calculate subtotal and total (for simplicity, this example assumes quote details are added first)
+		var quoteDetails []QuoteDetail
+		if err := db.Where("prescription_id = ?", body.ID).Find(&quoteDetails).Error; err != nil {
+			return nil,errors.New("failed to retrieve quote details")
+		}
+	
+		var subTotal float64
+		for _, detail := range quoteDetails {
+			subTotal += detail.Total
+		}
+		body.SubTotal = subTotal
+
+		//calculate vat
 	body.CalculateVAT(vatRate)
 
 
