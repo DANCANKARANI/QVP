@@ -2,8 +2,11 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
+	"time"
 
 	"github.com/DANCANKARANI/QVP/utilities"
 	"github.com/gofiber/fiber/v2"
@@ -30,24 +33,20 @@ type ResponsePrescription struct {
 }
 func AddPrescription(c *fiber.Ctx,user_id uuid.UUID) (*ResponsePrescription, error) {
 	role := GetAuthUser(c)
-	db.AutoMigrate(&Prescription{})
 	body := Prescription{}
-	if err:=c.BodyParser(&body);err != nil {
-		log.Fatal(err.Error())
-		return nil, errors.New("failed to add prescription")
-	}
-	prescription :=&Prescription{
-		SubTotal: body.SubTotal,
-	}
-	prescription.CalculateVAT(vatRate)
-	body.SubTotal = prescription.SubTotal
-	body.VAT=prescription.VAT
-	body.Total=prescription.Total
+	
+	body.QuoteNumber = GenerateQuoteNumber()
+
+	body.SubTotal = CalculateSubTotal(&body)
+	body.CalculateVAT(vatRate)
+
+
 	body.UserApprovedBy = &user_id
 	body.UserValidatedBy = &user_id
 	body.ID = uuid.New()
 	err:=db.Create(&body).Error
 	if err != nil {
+		log.Println("error adding prescription:",err.Error())
 		return nil, errors.New("failed to add data")
 	}
 	responsePrescrption:=&ResponsePrescription{
@@ -86,8 +85,10 @@ updates the prescription
 func UpdatePrescription(c *fiber.Ctx,id,user_id uuid.UUID)(*ResponsePrescription,error){
 	role := GetAuthUser(c)
 	body := Prescription{}
+	body.QuoteNumber = GenerateQuoteNumber()
 	prescription := Prescription{
 		SubTotal:body.SubTotal,
+		QuoteNumber: body.QuoteNumber,
 	}
 
 	if err:=c.BodyParser(&body); err != nil{
@@ -195,6 +196,20 @@ func GetPaginatePrescriptions(c *fiber.Ctx)(*PaginatedPrescriptions,int,error){
 	}
 	return paginatedPrescriptions,fiber.StatusOK,nil
 }
+/*
+calculate subtotal
+*/
+func CalculateSubTotal(prescription *Prescription) float64 {
+    var subTotal float64 = 0.0
+
+    // Loop through each QuoteDetail and calculate the total
+    for _, quoteDetail := range prescription.QuoteDetail {
+        itemTotal := (quoteDetail.Unit * quoteDetail.Quantity) - quoteDetail.Discount + quoteDetail.Vat
+        subTotal += itemTotal
+    }
+	log.Println(subTotal)
+    return subTotal
+}
 
 /*
 VAT calculator method
@@ -203,4 +218,10 @@ VAT calculator method
 func (p *Prescription)CalculateVAT(vatRate float64){
 	p.VAT = p.SubTotal*vatRate/100
 	p.Total = p.SubTotal+p.VAT
+}
+// GenerateQuoteNumber is a placeholder for your quote number generation logic
+func GenerateQuoteNumber() string {
+    datePrefix := time.Now().Format("20060102") // YYYYMMDD format
+    randomSuffix := rand.Intn(9999) // Random 4-digit number
+    return fmt.Sprintf("QUO-%s-%04d", datePrefix, randomSuffix)
 }
