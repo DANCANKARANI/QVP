@@ -144,9 +144,9 @@ type Prescription struct {
 type PrescriptionDetail struct{
     ID                  uuid.UUID       `json:"id" gorm:"type:varchar(36);primary_key"`
     PrescriptionID      uuid.UUID       `json:"prescription_id" gorm:"type:varchar(36) default:NULL"`
-    PrescriptionPath   string          `json:"prescription_detail" gorm:"type:varchar(1024)"`
-    ClaimPath          string          `json:"claim_form" gorm:"type:varchar(1024)"`
-    OtherFormPath     string          `json:"other_form_path" gorm:"type:varchar(1024)"`
+    PrescriptionPath    string          `json:"prescription_detail" gorm:"type:varchar(1024)"`
+    ClaimPath           string          `json:"claim_form" gorm:"type:varchar(1024)"`
+    OtherFormPath       string          `json:"other_form_path" gorm:"type:varchar(1024)"`
     CreatedAt           time.Time       `json:"created_at" gorm:"autoCreateTime"`
     UpdatedAt           time.Time       `json:"updated_at" gorm:"autoUpdateTime"`
     DeletedAt           gorm.DeletedAt  `json:"deleted_at" gorm:"index"`
