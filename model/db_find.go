@@ -151,3 +151,25 @@ func GetAuthUser(c *fiber.Ctx)(string){
 	}
 	return role
 }
+
+//find user with email
+func EmailExist(c *fiber.Ctx, email string) (bool, *User, error) {
+    var existingUser User
+
+    // Detailed logging
+    log.Printf("Checking for user with email: %s", email)
+
+    result := db.Where("email = ?", email).First(&existingUser)
+    if result.Error != nil {
+        // Log the detailed error
+        log.Printf("Error finding user with email %s: %v", email, result.Error)
+
+        if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+            return false, nil, nil
+        }
+
+        return false, nil, fmt.Errorf("database error: %v", result.Error)
+    }
+	log.Printf("User found: %+v", existingUser)
+    return true, &existingUser, nil
+}

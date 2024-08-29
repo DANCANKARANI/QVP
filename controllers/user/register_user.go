@@ -32,6 +32,15 @@ func CreateUserAccount(c *fiber.Ctx) error {
 	if err != nil {
 		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
 	}
+	//check email existence
+	emailExist,_,err := model.EmailExist(c,user.Email)
+	if err != nil{
+		return utilities.ShowError(c,err.Error(),fiber.StatusInternalServerError)
+	}
+	if emailExist{
+		errStr:="user with email "+user.Email+" already exist"
+		return utilities.ShowError(c,errStr,fiber.StatusConflict)
+	}
 	//Check if user exist
 	userExist,_,err:= model.UserExist(c,user.PhoneNumber)
 	if err != nil{
