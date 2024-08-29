@@ -26,7 +26,7 @@ func GetOneUSer(c *fiber.Ctx)(*ResponseUser,error){
 		return nil,errors.New("failed to get user's id:"+err.Error())
 	}
 	user := ResponseUser{}
-	err = db.Preload("Image").First(&User{},"id = ?",id).Scan(&user).Error
+	err = db.First(&User{},"id = ?",id).Scan(&user).Error
 	if err != nil {
 		return nil,errors.New("failed to get user details:"+err.Error())
 	}

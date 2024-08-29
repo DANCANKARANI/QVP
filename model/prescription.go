@@ -127,7 +127,7 @@ func UpdatePrescription(c *fiber.Ctx,id,user_id uuid.UUID)(*ResponsePrescription
 		return nil, errors.New("failed to update prescription")
 	}
 	newValues := prescription
-	//update audit log
+
 	//update audit log
 	if err := utilities.LogAudit("Update",user_id,role,"Prescription",id,oldValues,newValues,c); err != nil{
 		log.Println(err.Error())
